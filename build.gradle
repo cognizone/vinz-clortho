@@ -57,6 +57,7 @@ publishing {
       mavenJava(MavenPublication) {
         groupId = zone.cogni.vinz-clortho
 	artifactId = vinz-clortho
+	version = scmVersion.version
         from components.java
       }
     }
