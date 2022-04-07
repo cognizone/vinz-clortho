@@ -1,7 +1,24 @@
 plugins {
+        id 'pl.allegro.tech.build.axion-release' version '1.13.3'
 	id 'org.springframework.boot' version '2.6.6'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
+	id 'maven-publish'
+}
+
+scmVersion {
+  tag {
+    prefix = "v"
+    versionSeparator = ""
+    branchPrefix = [
+            'release/.*': 'release-v',
+            'hotfix/.*' : 'hotfix-v'
+    ]
+  }
+  nextVersion {
+    suffix = "SNAPSHOT"
+    separator = "-"
+  }
 }
 
 group = 'cogni.zone'
@@ -33,4 +50,24 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+publishing {
+    publications {
+      mavenJava(MavenPublication) {
+        groupId = zone.cogni.vinz-clortho
+	artifactId = vinz-clortho
+        from components.java
+      }
+    }
+    repositories {
+      maven {
+        credentials {
+          username = System.properties['archiva.user']
+          password = System.properties['archiva.password']
+        }
+        name = 'public'
+        url = System.properties['archiva.url']
+     }
+   }
 }
