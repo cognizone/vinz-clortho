@@ -1,9 +1,9 @@
 plugins {
-        id 'pl.allegro.tech.build.axion-release' version '1.13.3'
-	id 'org.springframework.boot' version '2.6.6'
-	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-	id 'java'
-	id 'maven-publish'
+  id 'pl.allegro.tech.build.axion-release' version '1.13.3'
+  id 'org.springframework.boot' version '2.6.6' apply false
+  id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+  id 'java'
+  id 'maven-publish'
 }
 
 scmVersion {
@@ -21,54 +21,56 @@ scmVersion {
   }
 }
 
-group = 'cogni.zone'
-version = '0.0.1-SNAPSHOT'
+group = 'zone.cogni.vinz-clortho'
+version = scmVersion.version
 sourceCompatibility = '11'
 
+dependencyManagement {
+  imports {
+    mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+  }
+}
+
 ext {
-	commonsIoVersion = "2.11.0"
-	commonsLang3Version = "3.12.0"
-	httpclientVersion = "4.5.13"
+  commonsIoVersion = "2.11.0"
+  commonsLang3Version = "3.12.0"
+  httpclientVersion = "4.5.13"
 }
 
 repositories {
-	mavenCentral()
-}
-
-bootJar {
-	enabled = false
+  mavenCentral()
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+  implementation 'org.springframework.boot:spring-boot-starter-web'
+  testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
-	implementation "commons-io:commons-io:${commonsIoVersion}"
-	implementation "org.apache.commons:commons-lang3:${commonsLang3Version}"
-	implementation "org.apache.httpcomponents:httpclient:${httpclientVersion}"
+  implementation "commons-io:commons-io:${commonsIoVersion}"
+  implementation "org.apache.commons:commons-lang3:${commonsLang3Version}"
+  implementation "org.apache.httpcomponents:httpclient:${httpclientVersion}"
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+  useJUnitPlatform()
 }
 
 publishing {
-    publications {
-      mavenJava(MavenPublication) {
-        groupId = 'zone.cogni.vinz-clortho'
-	artifactId = 'vinz-clortho'
-	version = scmVersion.version
-        from components.java
-      }
+  publications {
+    mavenJava(MavenPublication) {
+      groupId = group
+      artifactId = 'vinz-clortho'
+      version = scmVersion.version
+      from components.java
     }
-    repositories {
-      maven {
-        credentials {
-          username = System.properties['archiva.user']
-          password = System.properties['archiva.password']
-        }
-        name = 'public'
-        url = System.properties['archiva.url']
-     }
-   }
+  }
+  repositories {
+    maven {
+      credentials {
+        username = System.properties['archiva.user']
+        password = System.properties['archiva.password']
+      }
+      name = 'public'
+      url = System.properties['archiva.url']
+    }
+  }
 }
