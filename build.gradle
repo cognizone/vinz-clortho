@@ -55,8 +55,8 @@ tasks.named('test') {
 publishing {
     publications {
       mavenJava(MavenPublication) {
-        groupId = zone.cogni.vinz-clortho
-	artifactId = vinz-clortho
+        groupId = 'zone.cogni.vinz-clortho'
+	artifactId = 'vinz-clortho'
 	version = scmVersion.version
         from components.java
       }
