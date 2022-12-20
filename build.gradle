@@ -3,6 +3,7 @@ plugins {
   id 'org.springframework.boot' version '2.6.6' apply false
   id 'io.spring.dependency-management' version '1.0.11.RELEASE'
   id 'java'
+  id 'java-library'
   id 'maven-publish'
 }
 
@@ -54,6 +55,13 @@ tasks.named('test') {
   useJUnitPlatform()
 }
 
+task sourcesJar(type: Jar) {
+  description = 'Creates sources JAR.'
+  archiveClassifier = 'sources'
+
+  from sourceSets.main.allSource
+}
+
 publishing {
   publications {
     mavenJava(MavenPublication) {
@@ -61,6 +69,7 @@ publishing {
       artifactId = 'vinz-clortho'
       version = scmVersion.version
       from components.java
+      artifact sourcesJar
     }
   }
   repositories {
