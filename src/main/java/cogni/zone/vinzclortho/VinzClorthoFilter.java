@@ -4,8 +4,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -24,9 +26,13 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 public class VinzClorthoFilter implements Filter {
   private static final Logger log = LoggerFactory.getLogger(VinzClorthoFilter.class);
@@ -35,6 +41,12 @@ public class VinzClorthoFilter implements Filter {
   //in case we config this, Content-Length should be kept out as it's set by the client doing the proxied call
   private static final String[] requestHeadersToPass = {"Accept", "Accept-Language", "Content-Type", "User-Agent"};
   private static final String[] responseHeadersToPass = {"Content-Type"};
+
+  private static final Map<String, BiFunction<String, HttpServletRequest, HttpRequestBase>> requestBuilderPerHttpMethod =
+          Collections.synchronizedMap(Map.of("GET", VinzClorthoFilter::prepareGetRequest,
+                                             "POST", VinzClorthoFilter::preparePostRequest,
+                                             "PUT", VinzClorthoFilter::preparePutRequest,
+                                             "DELETE", VinzClorthoFilter::prepareDeleteRequest));
 
   private final Configuration config;
 
@@ -62,9 +74,7 @@ public class VinzClorthoFilter implements Filter {
 
   }
 
-  private void routeThis(HttpServletRequest httpRequest,
-                         HttpServletResponse httpResponse,
-                         Configuration.Route route) throws IOException {
+  private void routeThis(HttpServletRequest httpRequest, HttpServletResponse httpResponse, Configuration.Route route) throws IOException {
     log.debug("Proxying {} to route {}", httpRequest.getServletPath(), route);
     String url = constructUrl(route, httpRequest);
 
@@ -82,13 +92,13 @@ public class VinzClorthoFilter implements Filter {
     }
   }
 
-  private HttpRequestBase createRequest(String url, HttpServletRequest httpRequest) throws IOException {
+  @SuppressWarnings("MethodWithMultipleLoops")
+  private HttpRequestBase createRequest(String url, HttpServletRequest httpRequest) {
     String method = httpRequest.getMethod();
-    HttpRequestBase request;
-    if (method.equalsIgnoreCase("GET")) request = prepareGetRequest(url, httpRequest);
-    else if (method.equalsIgnoreCase("POST")) request = preparePostRequest(url, httpRequest);
-    else throw new RuntimeException("Vinz doesn't support " + method + " request yet.");
+    BiFunction<String, HttpServletRequest, HttpRequestBase> requestFunction = requestBuilderPerHttpMethod.get(method.toUpperCase(Locale.ROOT));
+    if (null == requestFunction) throw new RuntimeException("Vinz doesn't support " + method + " request yet.");
 
+    HttpRequestBase request = requestFunction.apply(url, httpRequest);
     for (String headersToPass : requestHeadersToPass) {
       Enumeration<String> headerValues = httpRequest.getHeaders(headersToPass);
       while (headerValues.hasMoreElements()) {
@@ -99,14 +109,36 @@ public class VinzClorthoFilter implements Filter {
     return request;
   }
 
-  private HttpGet prepareGetRequest(String url, HttpServletRequest httpRequest) {
+  @SuppressWarnings("unused")
+  private static HttpRequestBase prepareGetRequest(String url, HttpServletRequest httpRequest) {
     return new HttpGet(url);
   }
 
-  private HttpPost preparePostRequest(String url, HttpServletRequest httpRequest) throws IOException {
+  private static HttpRequestBase preparePostRequest(String url, HttpServletRequest httpRequest) {
     HttpPost httpPost = new HttpPost(url);
-    httpPost.setEntity(new InputStreamEntity(httpRequest.getInputStream()));
+    try {
+      httpPost.setEntity(new InputStreamEntity(httpRequest.getInputStream()));
+    }
+    catch (IOException e) {
+      throw new RuntimeException(e);
+    }
     return httpPost;
+  }
+
+  private static HttpRequestBase preparePutRequest(String url, HttpServletRequest httpRequest) {
+    HttpPut httpPut = new HttpPut(url);
+    try {
+      httpPut.setEntity(new InputStreamEntity(httpRequest.getInputStream()));
+    }
+    catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    return httpPut;
+  }
+
+  @SuppressWarnings("unused")
+  private static HttpRequestBase prepareDeleteRequest(String url, HttpServletRequest httpRequest) {
+    return new HttpDelete(url);
   }
 
   private String constructUrl(Configuration.Route route, HttpServletRequest httpRequest) {
@@ -150,8 +182,8 @@ public class VinzClorthoFilter implements Filter {
     @Override
     public String toString() {
       return new ToStringBuilder(this)
-        .append("routes", routes)
-        .toString();
+              .append("routes", routes)
+              .toString();
     }
 
     public static class Route {
@@ -187,10 +219,10 @@ public class VinzClorthoFilter implements Filter {
       @Override
       public String toString() {
         return new ToStringBuilder(this)
-          .append("name", name)
-          .append("path", path)
-          .append("url", url)
-          .toString();
+                .append("name", name)
+                .append("path", path)
+                .append("url", url)
+                .toString();
       }
     }
   }
