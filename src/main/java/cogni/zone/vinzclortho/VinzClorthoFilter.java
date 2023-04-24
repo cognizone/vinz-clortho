@@ -1,8 +1,9 @@
 package cogni.zone.vinzclortho;
 
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -24,16 +25,20 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
+import static cogni.zone.vinzclortho.CacheBodyFilter.bodyContentProviderAttributeKey;
+import static cogni.zone.vinzclortho.CacheBodyFilter.bodySizeProviderAttributeKey;
+
+@RequiredArgsConstructor
 public class VinzClorthoFilter implements Filter {
   private static final Logger log = LoggerFactory.getLogger(VinzClorthoFilter.class);
 
@@ -48,33 +53,24 @@ public class VinzClorthoFilter implements Filter {
                                              "PUT", VinzClorthoFilter::preparePutRequest,
                                              "DELETE", VinzClorthoFilter::prepareDeleteRequest));
 
-  private final Configuration config;
-
-  public VinzClorthoFilter(Configuration config) {
-    this.config = config;
-    log.info("Construct with config: {}", config);
-  }
+  private final RouteConfigurationService routeConfigurationService;
 
   @Override
   public void doFilter(ServletRequest request,
                        ServletResponse response,
                        FilterChain chain) throws IOException, ServletException {
     HttpServletRequest httpRequest = (HttpServletRequest) request;
-
-    Optional<Configuration.Route> matchingRoute = config.getRoutes().stream()
-                                                        .filter(route -> matches(route, httpRequest))
-                                                        .findFirst();
-
+    Optional<RouteConfigurationService.Route> matchingRoute = routeConfigurationService.findRoute(httpRequest);
     if (matchingRoute.isEmpty()) {
       chain.doFilter(request, response);
     }
     else {
       routeThis(httpRequest, (HttpServletResponse) response, matchingRoute.get());
     }
-
   }
 
-  private void routeThis(HttpServletRequest httpRequest, HttpServletResponse httpResponse, Configuration.Route route) throws IOException {
+
+  private void routeThis(HttpServletRequest httpRequest, HttpServletResponse httpResponse, RouteConfigurationService.Route route) throws IOException {
     log.debug("Proxying {} to route {}", httpRequest.getServletPath(), route);
     String url = constructUrl(route, httpRequest);
 
@@ -116,23 +112,13 @@ public class VinzClorthoFilter implements Filter {
 
   private static HttpRequestBase preparePostRequest(String url, HttpServletRequest httpRequest) {
     HttpPost httpPost = new HttpPost(url);
-    try {
-      httpPost.setEntity(new InputStreamEntity(httpRequest.getInputStream()));
-    }
-    catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    setBody(httpPost, httpRequest);
     return httpPost;
   }
 
   private static HttpRequestBase preparePutRequest(String url, HttpServletRequest httpRequest) {
     HttpPut httpPut = new HttpPut(url);
-    try {
-      httpPut.setEntity(new InputStreamEntity(httpRequest.getInputStream()));
-    }
-    catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    setBody(httpPut, httpRequest);
     return httpPut;
   }
 
@@ -141,16 +127,23 @@ public class VinzClorthoFilter implements Filter {
     return new HttpDelete(url);
   }
 
-  private String constructUrl(Configuration.Route route, HttpServletRequest httpRequest) {
+  private static void setBody(HttpEntityEnclosingRequest request, HttpServletRequest httpRequest) {
+    @SuppressWarnings("unchecked")
+    Supplier<InputStream> attribute = (Supplier<InputStream>) httpRequest.getAttribute(bodyContentProviderAttributeKey);
+    Long size = (Long) httpRequest.getAttribute(bodySizeProviderAttributeKey);
+    request.setEntity(new InputStreamEntity(attribute.get(), size));
+  }
+
+  private String constructUrl(RouteConfigurationService.Route route, HttpServletRequest httpRequest) {
     String servletPath = httpRequest.getServletPath();
     String extractPath = new AntPathMatcher().extractPathWithinPattern(route.getPath(), servletPath);
 
     String url = route.getUrl();
     if (StringUtils.isNotBlank(extractPath)) {
-      boolean alreadyHave = url.endsWith("/");
+      boolean alreadyHas = url.endsWith("/");
       boolean hasExtra = extractPath.startsWith("/");
-      if (alreadyHave && hasExtra) url += extractPath.substring(1);
-      else if (alreadyHave || hasExtra) url += extractPath;
+      if (alreadyHas && hasExtra) url += extractPath.substring(1);
+      else if (alreadyHas || hasExtra) url += extractPath;
       else url += "/" + extractPath;
     }
 
@@ -161,69 +154,5 @@ public class VinzClorthoFilter implements Filter {
 
     log.debug("Constructed new URL: {}", url);
     return url;
-  }
-
-  private boolean matches(Configuration.Route route, HttpServletRequest request) {
-    return new AntPathMatcher().match(route.getPath(), request.getServletPath());
-  }
-
-  public static class Configuration {
-
-    private List<Route> routes = new ArrayList<>();
-
-    public List<Route> getRoutes() {
-      return routes;
-    }
-
-    public void setRoutes(List<Route> routes) {
-      this.routes = routes;
-    }
-
-    @Override
-    public String toString() {
-      return new ToStringBuilder(this)
-              .append("routes", routes)
-              .toString();
-    }
-
-    public static class Route {
-      private String name;
-      private String path;
-      private String url;
-
-      public String getName() {
-        return name;
-      }
-
-      public Route setName(String name) {
-        this.name = name;
-        return this;
-      }
-
-      public String getPath() {
-        return path;
-      }
-
-      public void setPath(String path) {
-        this.path = path;
-      }
-
-      public String getUrl() {
-        return url;
-      }
-
-      public void setUrl(String url) {
-        this.url = url;
-      }
-
-      @Override
-      public String toString() {
-        return new ToStringBuilder(this)
-                .append("name", name)
-                .append("path", path)
-                .append("url", url)
-                .toString();
-      }
-    }
   }
 }

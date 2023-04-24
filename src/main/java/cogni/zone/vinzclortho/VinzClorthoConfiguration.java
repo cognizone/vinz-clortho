@@ -13,21 +13,35 @@ import javax.servlet.Filter;
 @Configuration
 @EnableConfigurationProperties
 public class VinzClorthoConfiguration {
-  public static final int filterOrder = Ordered.LOWEST_PRECEDENCE;
 
   @Bean
   @ConfigurationProperties(prefix = "cognizone.vinz")
-  public VinzClorthoFilter.Configuration vinzClorthoConfig() {
-    return new VinzClorthoFilter.Configuration();
+  public RouteConfigurationService.Configuration vinzClorthoConfig() {
+    return new RouteConfigurationService.Configuration();
+  }
+
+  @Bean
+  public RouteConfigurationService routeConfigurationService() {
+    return new RouteConfigurationService(vinzClorthoConfig());
   }
 
   @Bean
   @Lazy(false)
-  public FilterRegistrationBean<Filter> vinzClorthoFilter() {
+  public FilterRegistrationBean<Filter> vinzClorthoMainFilter() {
     FilterRegistrationBean<Filter> filterFilterRegistrationBean = new FilterRegistrationBean<>();
-    filterFilterRegistrationBean.setFilter(new VinzClorthoFilter(vinzClorthoConfig()));
-    filterFilterRegistrationBean.setOrder(filterOrder);
-    filterFilterRegistrationBean.setName("vinzClorthoFilter");
+    filterFilterRegistrationBean.setFilter(new VinzClorthoFilter(routeConfigurationService()));
+    filterFilterRegistrationBean.setOrder(Ordered.LOWEST_PRECEDENCE);
+    filterFilterRegistrationBean.setName("vinzClorthoMainFilter");
+    return filterFilterRegistrationBean;
+  }
+
+  @Bean
+  @Lazy(false)
+  public FilterRegistrationBean<Filter> vinzClorthoCacheBodyFilter() {
+    FilterRegistrationBean<Filter> filterFilterRegistrationBean = new FilterRegistrationBean<>();
+    filterFilterRegistrationBean.setFilter(new CacheBodyFilter(routeConfigurationService()));
+    filterFilterRegistrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+    filterFilterRegistrationBean.setName("vinzClorthoCacheBodyFilter");
     return filterFilterRegistrationBean;
   }
 
