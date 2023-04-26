@@ -1,7 +1,16 @@
+buildscript {
+  ext {
+    commonsIoVersion = "2.11.0"
+    commonsLang3Version = "3.12.0"
+    httpclientVersion = "4.5.13"
+  }
+}
+
 plugins {
   id 'pl.allegro.tech.build.axion-release' version '1.13.3'
-  id 'org.springframework.boot' version '2.6.6' apply false
+  id 'org.springframework.boot' version '2.6.14' apply false
   id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+  id 'idea'
   id 'java'
   id 'java-library'
   id 'maven-publish'
@@ -23,67 +32,92 @@ scmVersion {
   }
 }
 
-group = 'zone.cogni.vinz-clortho'
-version = scmVersion.version
-sourceCompatibility = '11'
-
-dependencyManagement {
-  imports {
-    mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+idea {
+  project {
+    jdkName = "11"
+    languageLevel = "11"
   }
 }
 
-ext {
-  commonsIoVersion = "2.11.0"
-  commonsLang3Version = "3.12.0"
-  httpclientVersion = "4.5.13"
-}
+subprojects {
+  apply plugin: 'java'
+  apply plugin: 'idea'
+  apply plugin: "io.freefair.lombok"
+  apply plugin: 'io.spring.dependency-management'
+  apply plugin: "maven-publish"
 
-repositories {
-  mavenCentral()
-}
+  group = 'zone.cogni.vinz-clortho'
+  version = scmVersion.version
+  sourceCompatibility = '11'
 
-dependencies {
-  annotationProcessor 'org.projectlombok:lombok'
-  compileOnly 'org.projectlombok:lombok'
-
-  implementation 'org.springframework.boot:spring-boot-starter-web'
-  testImplementation 'org.springframework.boot:spring-boot-starter-test'
-
-  implementation "commons-io:commons-io:${commonsIoVersion}"
-  implementation "org.apache.commons:commons-lang3:${commonsLang3Version}"
-  implementation "org.apache.httpcomponents:httpclient:${httpclientVersion}"
-}
-
-tasks.named('test') {
-  useJUnitPlatform()
-}
-
-task sourcesJar(type: Jar) {
-  description = 'Creates sources JAR.'
-  archiveClassifier = 'sources'
-
-  from sourceSets.main.allSource
-}
-
-publishing {
-  publications {
-    mavenJava(MavenPublication) {
-      groupId = group
-      artifactId = 'vinz-clortho'
-      version = scmVersion.version
-      from components.java
-      artifact sourcesJar
-    }
-  }
   repositories {
-    maven {
-      credentials {
-        username = System.properties['archiva.user']
-        password = System.properties['archiva.password']
-      }
-      name = 'public'
-      url = System.properties['archiva.url']
+    mavenLocal()
+    mavenCentral()
+    maven { url "https://repo.spring.io/milestone" }
+    maven { url "https://archiva.cogni.zone/repository/public" }
+  }
+
+  dependencyManagement {
+    imports {
+      mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
     }
+    dependencies {
+      dependency("commons-io:commons-io:${commonsIoVersion}")
+      dependency("org.apache.commons:commons-lang3:${commonsLang3Version}")
+      dependency("org.apache.httpcomponents:httpclient:${httpclientVersion}")
+    }
+  }
+
+  dependencies {
+    annotationProcessor 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok'
+  }
+
+  tasks.named('test') {
+    useJUnitPlatform()
+  }
+
+  task sourcesJar(type: Jar) {
+    description = 'Creates sources JAR.'
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
+  }
+
+
+  publishing {
+    repositories {
+      maven {
+        credentials {
+          username = System.properties['archiva.user']
+          password = System.properties['archiva.password']
+        }
+        name = 'public'
+        url = System.properties['archiva.url']
+      }
+    }
+    publishing {
+      publications {
+        mavenJava(MavenPublication) {
+          groupId = group
+          //artifactId = 'vinz-clortho'     //it will take the module name -> all fine
+          version = scmVersion.version
+          artifact jar
+          artifact sourcesJar
+        }
+      }
+    }
+  }
+}
+
+
+project("vinz-clortho") {
+  dependencies {
+    //implementation("javax.inject:javax.inject:1") //if we don't have this dependency the publication build does not work???
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    implementation "commons-io:commons-io"
+    implementation "org.apache.commons:commons-lang3"
+    implementation "org.apache.httpcomponents:httpclient"
   }
 }
