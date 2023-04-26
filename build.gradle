@@ -17,6 +17,11 @@ plugins {
   id "io.freefair.lombok" version "6.5.1"
 }
 
+repositories {
+  mavenLocal()
+  mavenCentral()
+}
+
 scmVersion {
   tag {
     prefix = "v"
