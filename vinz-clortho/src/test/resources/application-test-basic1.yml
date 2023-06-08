@@ -1,0 +1,6 @@
+cognizone:
+  vinz:
+    routes:
+      - name: basic1
+        path: /proxy/basic1/**
+        url: http://example.com/basic1

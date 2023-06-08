@@ -3,7 +3,9 @@ package cogni.zone.vinzclortho;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -12,7 +14,6 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.AntPathMatcher;
@@ -47,13 +48,18 @@ public class VinzClorthoFilter implements Filter {
   private static final String[] requestHeadersToPass = {"Accept", "Accept-Language", "Content-Type", "User-Agent"};
   private static final String[] responseHeadersToPass = {"Content-Type"};
 
-  private static final Map<String, BiFunction<String, HttpServletRequest, HttpRequestBase>> requestBuilderPerHttpMethod =
-          Collections.synchronizedMap(Map.of("GET", VinzClorthoFilter::prepareGetRequest,
-                                             "POST", VinzClorthoFilter::preparePostRequest,
-                                             "PUT", VinzClorthoFilter::preparePutRequest,
-                                             "DELETE", VinzClorthoFilter::prepareDeleteRequest));
+  private final Map<String, BiFunction<String, HttpServletRequest, HttpRequestBase>> requestBuilderPerHttpMethod = init();
 
   private final RouteConfigurationService routeConfigurationService;
+  private final HttpClientFactory httpClientFactory;
+  private final Optional<BodyEditor> bodyEditor;
+
+  private Map<String, BiFunction<String, HttpServletRequest, HttpRequestBase>> init() {
+    return Collections.synchronizedMap(Map.of("GET", this::prepareGetRequest,
+                                              "POST", this::preparePostRequest,
+                                              "PUT", this::preparePutRequest,
+                                              "DELETE", this::prepareDeleteRequest));
+  }
 
   @Override
   public void doFilter(ServletRequest request,
@@ -75,9 +81,10 @@ public class VinzClorthoFilter implements Filter {
     String url = constructUrl(route, httpRequest);
 
     HttpRequestBase request = createRequest(url, httpRequest);
-    try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
+    try (CloseableHttpClient client = httpClientFactory.create()) {
       CloseableHttpResponse proxiedResponse = client.execute(request);
-      httpResponse.setStatus(proxiedResponse.getStatusLine().getStatusCode());
+      StatusLine statusLine = proxiedResponse.getStatusLine();
+      httpResponse.setStatus(statusLine.getStatusCode());
 
       Arrays.stream(responseHeadersToPass)
             .map(proxiedResponse::getHeaders)
@@ -106,32 +113,33 @@ public class VinzClorthoFilter implements Filter {
   }
 
   @SuppressWarnings("unused")
-  private static HttpRequestBase prepareGetRequest(String url, HttpServletRequest httpRequest) {
+  private HttpRequestBase prepareGetRequest(String url, HttpServletRequest httpRequest) {
     return new HttpGet(url);
   }
 
-  private static HttpRequestBase preparePostRequest(String url, HttpServletRequest httpRequest) {
+  private HttpRequestBase preparePostRequest(String url, HttpServletRequest httpRequest) {
     HttpPost httpPost = new HttpPost(url);
     setBody(httpPost, httpRequest);
     return httpPost;
   }
 
-  private static HttpRequestBase preparePutRequest(String url, HttpServletRequest httpRequest) {
+  private HttpRequestBase preparePutRequest(String url, HttpServletRequest httpRequest) {
     HttpPut httpPut = new HttpPut(url);
     setBody(httpPut, httpRequest);
     return httpPut;
   }
 
   @SuppressWarnings("unused")
-  private static HttpRequestBase prepareDeleteRequest(String url, HttpServletRequest httpRequest) {
+  private HttpRequestBase prepareDeleteRequest(String url, HttpServletRequest httpRequest) {
     return new HttpDelete(url);
   }
 
-  private static void setBody(HttpEntityEnclosingRequest request, HttpServletRequest httpRequest) {
+  private void setBody(HttpEntityEnclosingRequest request, HttpServletRequest httpRequest) {
     @SuppressWarnings("unchecked")
     Supplier<InputStream> attribute = (Supplier<InputStream>) httpRequest.getAttribute(bodyContentProviderAttributeKey);
-    Long size = (Long) httpRequest.getAttribute(bodySizeProviderAttributeKey);
-    request.setEntity(new InputStreamEntity(attribute.get(), size));
+    HttpEntity httpEntity = bodyEditor.map(be -> be.editBody(httpRequest, attribute.get()))
+                                      .orElse(new InputStreamEntity(attribute.get(), (Long) httpRequest.getAttribute(bodySizeProviderAttributeKey)));
+    request.setEntity(httpEntity);
   }
 
   private String constructUrl(RouteConfigurationService.Route route, HttpServletRequest httpRequest) {

@@ -3,6 +3,9 @@ buildscript {
     commonsIoVersion = "2.11.0"
     commonsLang3Version = "3.12.0"
     httpclientVersion = "4.5.13"
+    junitVersion = "5.9.2"
+    assertJVersion = "3.24.2"
+    mockitoVersion = "5.3.1"
   }
 }
 
@@ -67,9 +70,14 @@ subprojects {
       mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
     }
     dependencies {
+      dependency("javax.inject:javax.inject:1")
       dependency("commons-io:commons-io:${commonsIoVersion}")
       dependency("org.apache.commons:commons-lang3:${commonsLang3Version}")
       dependency("org.apache.httpcomponents:httpclient:${httpclientVersion}")
+
+      dependency("org.junit.jupiter:junit-jupiter:${junitVersion}")
+      dependency("org.assertj:assertj-core:${assertJVersion}")
+      dependency("org.mockito:mockito-junit-jupiter:${mockitoVersion}")
     }
   }
 
@@ -124,5 +132,12 @@ project("vinz-clortho") {
     implementation "commons-io:commons-io"
     implementation "org.apache.commons:commons-lang3"
     implementation "org.apache.httpcomponents:httpclient"
+
+    //test
+    testImplementation("javax.inject:javax.inject")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.assertj:assertj-core")
+    testImplementation("org.mockito:mockito-junit-jupiter")
   }
 }
