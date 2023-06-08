@@ -36,8 +36,6 @@ class BodyEditorTest extends GoVinzTest {
     CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
     StatusLine statusLine = mock(StatusLine.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
-
-    //and:
     when(httpClientFactory.create()).thenReturn(httpClient);
     when(httpClient.execute(any(HttpPost.class))).thenReturn(httpResponse);
     when(statusLine.getStatusCode()).thenReturn(200);
