@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest()
 @ActiveProfiles({"test-basic1", "patch-body1"})
-class BodyEditorTest extends GoVinzTest {
+class BodyEditor1Test extends GoVinzTest {
 
   @Test
   public void bodyEditorTest() throws Exception {

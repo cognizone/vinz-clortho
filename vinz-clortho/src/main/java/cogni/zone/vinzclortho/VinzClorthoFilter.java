@@ -137,7 +137,7 @@ public class VinzClorthoFilter implements Filter {
   private void setBody(HttpEntityEnclosingRequest request, HttpServletRequest httpRequest) {
     @SuppressWarnings("unchecked")
     Supplier<InputStream> attribute = (Supplier<InputStream>) httpRequest.getAttribute(bodyContentProviderAttributeKey);
-    HttpEntity httpEntity = bodyEditor.map(be -> be.editBody(httpRequest, attribute.get()))
+    HttpEntity httpEntity = bodyEditor.map(be -> be.editBody(new BodyEditor.Request(httpRequest, attribute.get()))) // map() can return null...
                                       .orElse(new InputStreamEntity(attribute.get(), (Long) httpRequest.getAttribute(bodySizeProviderAttributeKey)));
     request.setEntity(httpEntity);
   }
