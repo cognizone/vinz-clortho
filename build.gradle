@@ -3,6 +3,7 @@ buildscript {
     commonsIoVersion = "2.11.0"
     commonsLang3Version = "3.12.0"
     httpclientVersion = "4.5.13"
+    jsr305Version = "3.0.2"
     junitVersion = "5.9.2"
     assertJVersion = "3.24.2"
     mockitoVersion = "5.3.1"
@@ -71,6 +72,7 @@ subprojects {
     }
     dependencies {
       dependency("javax.inject:javax.inject:1")
+      dependency("com.google.code.findbugs:jsr305:${jsr305Version}")
       dependency("commons-io:commons-io:${commonsIoVersion}")
       dependency("org.apache.commons:commons-lang3:${commonsLang3Version}")
       dependency("org.apache.httpcomponents:httpclient:${httpclientVersion}")
@@ -127,13 +129,14 @@ project("vinz-clortho") {
   dependencies {
     //implementation("javax.inject:javax.inject:1") //if we don't have this dependency the publication build does not work???
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
+    implementation "com.google.code.findbugs:jsr305"
     implementation "commons-io:commons-io"
     implementation "org.apache.commons:commons-lang3"
     implementation "org.apache.httpcomponents:httpclient"
 
     //test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation("javax.inject:javax.inject")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.junit.jupiter:junit-jupiter")
