@@ -67,6 +67,7 @@ subprojects {
           username = System.properties['nexus.username']
           password = System.properties['nexus.password']
         }
+        allowInsecureProtocol(true)
       }
     }
     mavenLocal()
