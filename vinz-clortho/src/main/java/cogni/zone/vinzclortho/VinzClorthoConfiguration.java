@@ -19,6 +19,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class VinzClorthoConfiguration {
+  private final Optional<RequestValidator> requestValidator;
   private final Optional<BodyEditor> bodyEditor;
 
   @Bean
@@ -37,7 +38,7 @@ public class VinzClorthoConfiguration {
   public FilterRegistrationBean<Filter> vinzClorthoMainFilter() {
     log.info("Init filter with bodyEditor: {}", bodyEditor.isPresent());
     FilterRegistrationBean<Filter> filterFilterRegistrationBean = new FilterRegistrationBean<>();
-    filterFilterRegistrationBean.setFilter(new VinzClorthoFilter(routeConfigurationService(), httpClientFactory(), bodyEditor));
+    filterFilterRegistrationBean.setFilter(new VinzClorthoFilter(routeConfigurationService(), httpClientFactory(), requestValidator, bodyEditor));
     filterFilterRegistrationBean.setOrder(Ordered.LOWEST_PRECEDENCE);
     filterFilterRegistrationBean.setName("vinzClorthoMainFilter");
     return filterFilterRegistrationBean;

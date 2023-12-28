@@ -1,6 +1,7 @@
 package cogni.zone.vinzclortho;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.StringEntity;
 import org.assertj.core.api.Assertions;
 import org.springframework.context.annotation.Bean;
@@ -32,5 +33,21 @@ public class EnableVinzInTestConfiguration {
       return null;
     };
   }
+
+  @Bean
+  @Profile("requestValidator-failOnBlup")
+  public RequestValidator requestValidator1() {
+    return requestInfo -> {
+      String originalContent = TestHelper.toString(requestInfo.getBodySupplier().get());
+      if (originalContent.contains("Blup")) return new HttpResponse(400, "contentWithBlup");
+
+      String blup = requestInfo.getRequest().getParameter("blup");
+      if (StringUtils.isNotBlank(blup)) return new HttpResponse(400, "param: " + blup);
+
+      return null;
+    };
+  }
+
+
 }
 
