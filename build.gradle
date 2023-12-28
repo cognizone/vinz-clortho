@@ -123,11 +123,6 @@ subprojects {
     useJUnitPlatform()
   }
 
-  task sourcesJar(type: Jar) {
-    description = 'Creates sources JAR.'
-    archiveClassifier = 'sources'
-    from sourceSets.main.allSource
-  }
 
 
   publishing {
