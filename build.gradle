@@ -100,6 +100,25 @@ subprojects {
     compileOnly 'org.projectlombok:lombok'
   }
 
+  jar {
+    from("${projectDir}") {
+      include 'LICENSE'
+      into '/'
+    }
+    from("${projectDir}") {
+      include 'LICENSE'
+      into 'META-INF'
+    }
+  }
+
+  java {
+    withJavadocJar()
+    withSourcesJar()
+  }
+
+
+
+
   tasks.named('test') {
     useJUnitPlatform()
   }
@@ -116,8 +135,35 @@ subprojects {
       mavenJava(MavenPublication) {
         groupId = group
         version = scmVersion.version
-        artifact jar
-        artifact sourcesJar
+        from components.java
+        pom {
+          name = "${project.name}"
+          packaging = 'jar'
+          // optionally artifactId can be defined here
+          description = 'A lightweight replacement for Zuul when using spring boot 2.7+'
+          url = 'https://github.com/cognizone/vinz-clortho'
+
+          scm {
+            connection = 'scm:git:git@https://github.com/cognizone/vinz-clortho.git'
+            developerConnection = 'scm:git:git@github.com:cognizone/vinz-clortho.git'
+            url = 'https://github.com/cognizone/vinz-clortho'
+          }
+
+          licenses {
+            license {
+              name = 'The Apache License, Version 2.0'
+              url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            }
+          }
+
+          developers {
+            developer {
+              id = 'cognizone'
+              name = 'Cognizone'
+              email = 'cognizone-lib-dev@cogni.zone'
+            }
+          }
+        }
       }
     }
     repositories {
