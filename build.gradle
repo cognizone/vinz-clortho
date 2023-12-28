@@ -54,6 +54,7 @@ subprojects {
   apply plugin: "io.freefair.lombok"
   apply plugin: 'io.spring.dependency-management'
   apply plugin: "maven-publish"
+  apply plugin: 'signing'
 
   group = 'zone.cogni.lib.vinz-clortho'
   project.version = scmVersion.version
