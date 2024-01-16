@@ -226,9 +226,8 @@ project("vinz-clortho") {
     implementation "org.apache.httpcomponents:httpclient"
 
     //test
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation("javax.inject:javax.inject")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("javax.inject:javax.inject")
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.assertj:assertj-core")
     testImplementation("org.mockito:mockito-junit-jupiter")

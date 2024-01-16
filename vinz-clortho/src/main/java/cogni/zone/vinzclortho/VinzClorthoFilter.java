@@ -16,17 +16,21 @@ import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.util.AntPathMatcher;
 
+import javax.annotation.Nullable;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -52,6 +56,7 @@ public class VinzClorthoFilter implements Filter {
 
   private final RouteConfigurationService routeConfigurationService;
   private final HttpClientFactory httpClientFactory;
+  private final Optional<RequestValidator> requestValidator;
   private final Optional<BodyEditor> bodyEditor;
 
   private Map<String, BiFunction<String, HttpServletRequest, HttpRequestBase>> init() {
@@ -75,12 +80,23 @@ public class VinzClorthoFilter implements Filter {
     }
   }
 
-
   private void routeThis(HttpServletRequest httpRequest, HttpServletResponse httpResponse, RouteConfigurationService.Route route) throws IOException {
     log.debug("Proxying {} to route {}", httpRequest.getServletPath(), route);
-    String url = constructUrl(route, httpRequest);
+    BiFunction<String, HttpServletRequest, HttpRequestBase> requestFunction = prepareRequestFunction(httpRequest);
+    if (null == requestFunction) {
+      sendResponse(httpResponse, HttpResponse.of(HttpStatus.METHOD_NOT_ALLOWED));
+      return;
+    }
 
-    HttpRequestBase request = createRequest(url, httpRequest);
+    Supplier<InputStream> attribute = (Supplier<InputStream>) httpRequest.getAttribute(bodyContentProviderAttributeKey);
+    Optional<HttpResponse> httpStatus = requestValidator.map(validator -> validator.validate(new RequestValidator.Request(httpRequest, attribute)));
+    if (httpStatus.isPresent()) {
+      sendResponse(httpResponse, httpStatus.get());
+      return;
+    }
+
+    String url = constructUrl(route, httpRequest);
+    HttpRequestBase request = createRequest(requestFunction, url, httpRequest);
     try (CloseableHttpClient client = httpClientFactory.create()) {
       CloseableHttpResponse proxiedResponse = client.execute(request);
       StatusLine statusLine = proxiedResponse.getStatusLine();
@@ -95,12 +111,21 @@ public class VinzClorthoFilter implements Filter {
     }
   }
 
-  @SuppressWarnings("MethodWithMultipleLoops")
-  private HttpRequestBase createRequest(String url, HttpServletRequest httpRequest) {
+  @Nullable
+  private BiFunction<String, HttpServletRequest, HttpRequestBase> prepareRequestFunction(HttpServletRequest httpRequest) {
     String method = httpRequest.getMethod();
-    BiFunction<String, HttpServletRequest, HttpRequestBase> requestFunction = requestBuilderPerHttpMethod.get(method.toUpperCase(Locale.ROOT));
-    if (null == requestFunction) throw new RuntimeException("Vinz doesn't support " + method + " request yet.");
+    return requestBuilderPerHttpMethod.get(method.toUpperCase(Locale.ROOT));
+  }
 
+  private void sendResponse(HttpServletResponse httpServletResponse, HttpResponse httpResponse) throws IOException {
+    httpServletResponse.setStatus(httpResponse.getStatus());
+    ServletOutputStream outputStream = httpServletResponse.getOutputStream();
+    outputStream.write( httpResponse.getMessage().getBytes(StandardCharsets.UTF_8));
+    outputStream.flush();
+  }
+
+  @SuppressWarnings("MethodWithMultipleLoops")
+  private HttpRequestBase createRequest(BiFunction<String, HttpServletRequest, HttpRequestBase> requestFunction, String url, HttpServletRequest httpRequest) {
     HttpRequestBase request = requestFunction.apply(url, httpRequest);
     for (String headersToPass : requestHeadersToPass) {
       Enumeration<String> headerValues = httpRequest.getHeaders(headersToPass);

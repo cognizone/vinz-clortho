@@ -23,6 +23,11 @@ Create a spring bean implementing `cogni.zone.vinzclortho.BodyEditor`.
 If such a bean exists, it will be called with the original HttpRequest and content body as an InputStream, so you can change the content of the request body.
 The new body has to be returned as a `org.apache.http.HttpEntity` object.
 
+### Validate if a Request is allowed
+Create a spring bean implementing `cogni.zone.vinzclortho.RequestValidator`.
+If such a bean exists, it will be called with the original request information.
+If you return a non-null value, that value with be used to send the response and no proxying will be done.
+
 ### HTTP methods
 At the moment following HTTP methods are supported: GET, POST, PUT, DELETE
 
