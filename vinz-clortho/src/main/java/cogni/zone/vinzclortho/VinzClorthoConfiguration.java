@@ -14,6 +14,7 @@ import org.springframework.core.Ordered;
 import javax.servlet.Filter;
 import java.util.Optional;
 
+@SuppressWarnings("ClassHasNoToStringMethod")
 @Configuration
 @EnableConfigurationProperties
 @RequiredArgsConstructor
@@ -21,6 +22,11 @@ import java.util.Optional;
 public class VinzClorthoConfiguration {
   private final Optional<RequestValidator> requestValidator;
   private final Optional<BodyEditor> bodyEditor;
+
+  @SuppressWarnings("WeakerAccess")
+  public static final int cacheBodyFilterOrder = Ordered.HIGHEST_PRECEDENCE;
+  @SuppressWarnings("WeakerAccess")
+  public static final int mainFilterOrder = Ordered.LOWEST_PRECEDENCE;
 
   @Bean
   @ConfigurationProperties(prefix = "cognizone.vinz")
@@ -39,7 +45,7 @@ public class VinzClorthoConfiguration {
     log.info("Init filter with bodyEditor: {}", bodyEditor.isPresent());
     FilterRegistrationBean<Filter> filterFilterRegistrationBean = new FilterRegistrationBean<>();
     filterFilterRegistrationBean.setFilter(new VinzClorthoFilter(routeConfigurationService(), httpClientFactory(), requestValidator, bodyEditor));
-    filterFilterRegistrationBean.setOrder(Ordered.LOWEST_PRECEDENCE);
+    filterFilterRegistrationBean.setOrder(mainFilterOrder);
     filterFilterRegistrationBean.setName("vinzClorthoMainFilter");
     return filterFilterRegistrationBean;
   }
@@ -49,7 +55,7 @@ public class VinzClorthoConfiguration {
   public FilterRegistrationBean<Filter> vinzClorthoCacheBodyFilter() {
     FilterRegistrationBean<Filter> filterFilterRegistrationBean = new FilterRegistrationBean<>();
     filterFilterRegistrationBean.setFilter(new CacheBodyFilter(routeConfigurationService()));
-    filterFilterRegistrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+    filterFilterRegistrationBean.setOrder(cacheBodyFilterOrder);
     filterFilterRegistrationBean.setName("vinzClorthoCacheBodyFilter");
     return filterFilterRegistrationBean;
   }
