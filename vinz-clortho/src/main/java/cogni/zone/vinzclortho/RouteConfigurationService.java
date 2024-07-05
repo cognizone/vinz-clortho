@@ -41,5 +41,18 @@ public class RouteConfigurationService {
     private String name;
     private String path;
     private String url;
+    private Headers headers = new Headers();
+  }
+
+  @Data
+  public static class Headers {
+    private List<Header> responseSet = new ArrayList<>();
+  }
+
+  @Data
+  public static class Header {
+    private String key;
+    private String value;
+    private String filter;
   }
 }

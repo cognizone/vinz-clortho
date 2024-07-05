@@ -1,0 +1,14 @@
+cognizone:
+  vinz:
+    routes:
+      - name: addHeader
+        path: /proxy/addHeader/**
+        url: http://example.com/addHeader
+        headers:
+          response-set:
+            - key: X-Bla1
+              value: value1
+            - key: X-Bla2
+              value: value2
+              filter: "#{[request].getHeader('X-Bla-in') != null}"
+

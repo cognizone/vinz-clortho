@@ -14,6 +14,11 @@ cognizone:
       - name: secondRoute
         path: /proxy/route2/**
         url: http://example.com/route2
+        headers:
+          response-set:
+            - key: Access-Control-Allow-Headers
+              value: "*"
+              filter: "#{[request].getHeader('Origin') != null}"
 ```
 That's it, you're all set.
 
@@ -38,7 +43,9 @@ Follow headers will be passed from the original request:
 - Content-Type
 - User-Agent
 
-After the proxied request, following response headers will be send back to the client:
+After the proxied request, following response headers will be sent back to the client:
 - Content-Type
 
- 
+In the example above `Access-Control-Allow-Headers: *` will be added to the response of secondRoute in case the filter matches.
+The filter should be a spel expression that returns a boolean. 
+In this example (`#{[request].getHeader('Origin') != null}`) the header will be set if the original request contains an `Origin` header.

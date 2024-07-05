@@ -16,6 +16,10 @@ import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.common.TemplateParserContext;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.AntPathMatcher;
 
@@ -96,7 +100,7 @@ public class VinzClorthoFilter implements Filter {
     }
 
     String url = constructUrl(route, httpRequest);
-    HttpRequestBase request = createRequest(requestFunction, url, httpRequest);
+    HttpRequestBase request = createRequest(requestFunction, url, httpRequest, route);
     try (CloseableHttpClient client = httpClientFactory.create()) {
       CloseableHttpResponse proxiedResponse = client.execute(request);
       StatusLine statusLine = proxiedResponse.getStatusLine();
@@ -107,7 +111,30 @@ public class VinzClorthoFilter implements Filter {
             .flatMap(Arrays::stream)
             .forEach(header -> httpResponse.addHeader(header.getName(), header.getValue()));
 
+      route.getHeaders()
+           .getResponseSet()
+           .stream()
+           .filter(header -> applyHeader(header, httpRequest))
+           .forEach(header -> httpResponse.setHeader(header.getKey(), header.getValue()));
+
+
       IOUtils.copy(proxiedResponse.getEntity().getContent(), httpResponse.getOutputStream());
+    }
+  }
+
+  private boolean applyHeader(RouteConfigurationService.Header header, HttpServletRequest httpRequest) {
+    if (StringUtils.isBlank(header.getFilter())) return true;
+
+    try {
+      ExpressionParser parser = new SpelExpressionParser();
+      Expression exp = parser.parseExpression(header.getFilter(), new TemplateParserContext());
+      Boolean request = (Boolean) exp.getValue(Map.of("request", httpRequest));
+      if (null == request) throw new NullPointerException("Filter returned null");
+      return request;
+    }
+    catch (Exception e) {
+      log.warn("Filter [{}] failed - keeping the header: ", header.getFilter(), e);
+      return true;
     }
   }
 
@@ -120,12 +147,15 @@ public class VinzClorthoFilter implements Filter {
   private void sendResponse(HttpServletResponse httpServletResponse, HttpResponse httpResponse) throws IOException {
     httpServletResponse.setStatus(httpResponse.getStatus());
     ServletOutputStream outputStream = httpServletResponse.getOutputStream();
-    outputStream.write( httpResponse.getMessage().getBytes(StandardCharsets.UTF_8));
+    outputStream.write(httpResponse.getMessage().getBytes(StandardCharsets.UTF_8));
     outputStream.flush();
   }
 
   @SuppressWarnings("MethodWithMultipleLoops")
-  private HttpRequestBase createRequest(BiFunction<String, HttpServletRequest, HttpRequestBase> requestFunction, String url, HttpServletRequest httpRequest) {
+  private HttpRequestBase createRequest(BiFunction<String, HttpServletRequest, HttpRequestBase> requestFunction,
+                                        String url,
+                                        HttpServletRequest httpRequest,
+                                        RouteConfigurationService.Route route) {
     HttpRequestBase request = requestFunction.apply(url, httpRequest);
     for (String headersToPass : requestHeadersToPass) {
       Enumeration<String> headerValues = httpRequest.getHeaders(headersToPass);
