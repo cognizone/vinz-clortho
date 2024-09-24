@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.Ordered;
 
-import javax.servlet.Filter;
+import jakarta.servlet.Filter;
 import java.util.Optional;
 
 @SuppressWarnings("ClassHasNoToStringMethod")
