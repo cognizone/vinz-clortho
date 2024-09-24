@@ -1,2 +1,15 @@
+// Ensure the Java plugin is applied to access javaToolchains
+plugins {
+    id 'java'
+}
+
+gradle.settingsEvaluated {
+    def javaInstallation = javaToolchains.installationFor {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    gradle.startParameter.javaHome = javaInstallation.get().javaHome
+}
+
+
 rootProject.name = 'vinz-clortho'
 include "vinz-clortho"
