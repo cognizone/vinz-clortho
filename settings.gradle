@@ -1,6 +1,2 @@
-org.gradle.java.installations.auto-download=true
-org.gradle.java.installations.auto-detect=false
-org.gradle.java.installation=JDK17
-
 rootProject.name = 'vinz-clortho'
 include "vinz-clortho"
