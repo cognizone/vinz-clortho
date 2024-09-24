@@ -58,7 +58,12 @@ subprojects {
 
   group = 'zone.cogni.lib.vinz-clortho'
   project.version = scmVersion.version
-  sourceCompatibility = '17'
+  java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(17)
+    }
+   }
+
 
   repositories {
     if (project.hasProperty('jenkins-ci')) {
