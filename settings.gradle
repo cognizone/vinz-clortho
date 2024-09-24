@@ -1,15 +1,3 @@
-gradle.settingsEvaluated {
-    // Obtain a Java 17 installation
-    def javaLauncher = gradle.javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(17)
-        vendor = JvmVendorSpec.AZUL // Optional: specify vendor if needed
-    }.get()
-
-    // Set the Java home for the Gradle runtime
-    gradle.startParameter.javaHome = javaLauncher.metadata.installationPath.asFile
-}
-
-
 
 rootProject.name = 'vinz-clortho'
 include "vinz-clortho"
