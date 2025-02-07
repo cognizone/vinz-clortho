@@ -164,6 +164,11 @@ public class VinzClorthoFilter implements Filter {
         request.addHeader(headersToPass, headerValue);
       }
     }
+
+    route.getHeaders()
+         .getRequestSet()
+         .forEach(headerToSet -> request.addHeader(headerToSet.getKey(), headerToSet.getValue()));
+
     return request;
   }
 

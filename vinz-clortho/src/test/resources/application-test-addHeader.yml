@@ -11,4 +11,7 @@ cognizone:
             - key: X-Bla2
               value: value2
               filter: "#{[request].getHeader('X-Bla-in') != null}"
+          request-set:
+            - key: X-Send-This-As-Header
+              value: someValue
 

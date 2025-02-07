@@ -47,6 +47,7 @@ public class RouteConfigurationService {
   @Data
   public static class Headers {
     private List<Header> responseSet = new ArrayList<>();
+    private List<Header> requestSet = new ArrayList<>();
   }
 
   @Data
