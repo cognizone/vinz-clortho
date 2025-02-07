@@ -1,5 +1,14 @@
 package cogni.zone.vinzclortho;
 
+import jakarta.annotation.Nullable;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -23,15 +32,6 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.AntPathMatcher;
 
-import jakarta.annotation.Nullable;
-import jakarta.servlet.Filter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -164,6 +164,11 @@ public class VinzClorthoFilter implements Filter {
         request.addHeader(headersToPass, headerValue);
       }
     }
+
+    route.getHeaders()
+         .getRequestSet()
+         .forEach(headerToSet -> request.addHeader(headerToSet.getKey(), headerToSet.getValue()));
+
     return request;
   }
 

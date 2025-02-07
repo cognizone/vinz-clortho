@@ -1,7 +1,7 @@
 buildscript {
   ext {
-    commonsIoVersion = "2.11.0"
-    commonsLang3Version = "3.12.0"
+    commonsIoVersion = "2.18.0"
+    commonsLang3Version = "3.17.0"
     httpclientVersion = "4.5.13"
     jsr305Version = "3.0.2"
     junitVersion = "5.9.2"
@@ -216,7 +216,6 @@ project("vinz-clortho") {
     implementation("javax.inject:javax.inject:1") //if we don't have this dependency the publication build does not work???
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
-    implementation "com.google.code.findbugs:jsr305"
     implementation "commons-io:commons-io"
     implementation "org.apache.commons:commons-lang3"
     implementation "org.apache.httpcomponents:httpclient"
