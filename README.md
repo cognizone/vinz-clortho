@@ -8,7 +8,7 @@ Then setup the routing configuration like this:
 cognizone:
   vinz:
     httpClient:
-      useSystemProperties: true/false # (default false) - since v2.0.1 
+      useSystemProperties: true/false # (default false) - since v2.0.2
     routes:
       - name: firstRoute   # just a name, make it unique, nothing else special here 
         path: /proxy/route1/**  # the path on your server (if you use a servlet context path, this will be the part after the context path) 
