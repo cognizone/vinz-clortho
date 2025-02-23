@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.core.Ordered;
 
 import jakarta.servlet.Filter;
+
 import java.util.Optional;
 
 @SuppressWarnings("ClassHasNoToStringMethod")
@@ -62,7 +63,8 @@ public class VinzClorthoConfiguration {
 
   @Bean
   public HttpClientFactory httpClientFactory() {
-    return () -> HttpClientBuilder.create().build();
+    return vinzClorthoConfig().getHttpClient().isUseSystemProperties() ? () -> HttpClientBuilder.create().useSystemProperties().build()
+                                                                       : () -> HttpClientBuilder.create().build();
   }
 
 }

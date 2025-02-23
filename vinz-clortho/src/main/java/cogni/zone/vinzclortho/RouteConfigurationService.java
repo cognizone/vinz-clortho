@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.AntPathMatcher;
 
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,6 +35,12 @@ public class RouteConfigurationService {
   @Data
   public static class Configuration {
     private List<Route> routes = Collections.synchronizedList(new ArrayList<>());
+    private HttpClient httpClient = new HttpClient();
+  }
+
+  @Data
+  public static class HttpClient {
+    private boolean useSystemProperties;
   }
 
   @Data
