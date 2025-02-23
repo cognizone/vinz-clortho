@@ -62,7 +62,8 @@ public class VinzClorthoConfiguration {
 
   @Bean
   public HttpClientFactory httpClientFactory() {
-    return () -> HttpClientBuilder.create().build();
+    return vinzClorthoConfig().getHttpClient().isUseSystemProperties() ? () -> HttpClientBuilder.create().useSystemProperties().build()
+                                                                       : () -> HttpClientBuilder.create().build();
   }
 
 }

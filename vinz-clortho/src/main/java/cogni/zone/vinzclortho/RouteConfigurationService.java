@@ -34,6 +34,12 @@ public class RouteConfigurationService {
   @Data
   public static class Configuration {
     private List<Route> routes = Collections.synchronizedList(new ArrayList<>());
+    private HttpClient httpClient = new HttpClient();
+  }
+
+  @Data
+  public static class HttpClient {
+    private boolean useSystemProperties;
   }
 
   @Data
