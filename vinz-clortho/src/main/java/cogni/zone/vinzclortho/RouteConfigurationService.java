@@ -62,5 +62,11 @@ public class RouteConfigurationService {
     private String key;
     private String value;
     private String filter;
+    private EvaluateType evaluate;
+  }
+
+  public enum EvaluateType {
+    raw,
+    spel
   }
 }

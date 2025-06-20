@@ -10,6 +10,7 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
@@ -23,8 +24,6 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.common.TemplateParserContext;
@@ -48,8 +47,8 @@ import static cogni.zone.vinzclortho.CacheBodyFilter.bodyContentProviderAttribut
 import static cogni.zone.vinzclortho.CacheBodyFilter.bodySizeProviderAttributeKey;
 
 @RequiredArgsConstructor
+@Slf4j
 public class VinzClorthoFilter implements Filter {
-  private static final Logger log = LoggerFactory.getLogger(VinzClorthoFilter.class);
 
   //TODO: put this in config this...
   //in case we config this, Content-Length should be kept out as it's set by the client doing the proxied call
@@ -115,11 +114,28 @@ public class VinzClorthoFilter implements Filter {
            .getResponseSet()
            .stream()
            .filter(header -> applyHeader(header, httpRequest))
-           .forEach(header -> httpResponse.setHeader(header.getKey(), header.getValue()));
-
+           .forEach(header -> httpResponse.setHeader(header.getKey(), calculateHeaderValue(header)));
 
       IOUtils.copy(proxiedResponse.getEntity().getContent(), httpResponse.getOutputStream());
     }
+  }
+
+  private String calculateHeaderValue(RouteConfigurationService.Header header) {
+    if (header.getEvaluate() == RouteConfigurationService.EvaluateType.spel) {
+      try {
+        ExpressionParser parser = new SpelExpressionParser();
+        Expression exp = parser.parseExpression(header.getValue(), new TemplateParserContext());
+        Object patchedValue = exp.getValue();
+        if (null == patchedValue) throw new NullPointerException("Patch header value returned null");
+        log.info("Patched header [{}] : from [{}] to [{}]", header.getKey(), header.getValue(), patchedValue);
+        return patchedValue.toString();
+      }
+      catch (Exception e) {
+        log.warn("Patch header value [{}] failed - returning empty: ", header.getValue(), e);
+        return "";
+      }
+    }
+    return header.getValue();
   }
 
   private boolean applyHeader(RouteConfigurationService.Header header, HttpServletRequest httpRequest) {
@@ -128,9 +144,9 @@ public class VinzClorthoFilter implements Filter {
     try {
       ExpressionParser parser = new SpelExpressionParser();
       Expression exp = parser.parseExpression(header.getFilter(), new TemplateParserContext());
-      Boolean request = (Boolean) exp.getValue(Map.of("request", httpRequest));
-      if (null == request) throw new NullPointerException("Filter returned null");
-      return request;
+      Boolean result = (Boolean) exp.getValue(Map.of("request", httpRequest));
+      if (null == result) throw new NullPointerException("Filter returned null");
+      return result;
     }
     catch (Exception e) {
       log.warn("Filter [{}] failed - keeping the header: ", header.getFilter(), e);
@@ -167,7 +183,7 @@ public class VinzClorthoFilter implements Filter {
 
     route.getHeaders()
          .getRequestSet()
-         .forEach(headerToSet -> request.addHeader(headerToSet.getKey(), headerToSet.getValue()));
+         .forEach(headerToSet -> request.addHeader(headerToSet.getKey(), calculateHeaderValue(headerToSet)));
 
     return request;
   }

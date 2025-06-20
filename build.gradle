@@ -64,8 +64,6 @@ subprojects {
 
   group = 'zone.cogni.lib.vinz-clortho'
   project.version = scmVersion.version
-  
-
 
   repositories {
     if (project.hasProperty('jenkins-ci')) {
@@ -122,14 +120,9 @@ subprojects {
     withSourcesJar()
   }
 
-
-
-
   tasks.named('test') {
     useJUnitPlatform()
   }
-
-
 
   publishing {
     publications {
@@ -205,11 +198,7 @@ subprojects {
   tasks.withType(Javadoc) {
     failOnError false
   }
-
-
-
 }
-
 
 project("vinz-clortho") {
   dependencies {
