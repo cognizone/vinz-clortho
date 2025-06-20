@@ -21,6 +21,9 @@ cognizone:
             - key: Access-Control-Allow-Headers
               value: "*"
               filter: "#{[request].getHeader('Origin') != null}"
+            - key: X-Requestor-User-ID
+              value: "#{T(org.springframework.security.core.context.SecurityContextHolder).context.authentication.principal.id}"
+              evaluate: spel
           request-set:
             - key: X-Send-This-As-Header
               value: "someValue"
@@ -60,6 +63,13 @@ After the proxied request, following response headers will be sent back to the c
 
 Using configuration `.headers.response-set` you can also set extra headers to send back to the caller.
 The setting of these extra headers can be ignored based on filter which is evaluated as a SpEL expression.
+
+#### Use expressions as header values to update them at runtime (since 2.0.3)  
+Pass an `evaluate` value for the header properties.
+Current supported values can be `spel` to handle the value as a SpEL expression, or `raw` (default) to just use the value without any transformations.
+Other values will fallback to `raw`.
+
+_Note: For a SpEL expression: is the transformation fails, an empty string will be used._
 
 #### Example info
 In the example above `Access-Control-Allow-Headers: *` will be added to the response of secondRoute in case the filter matches.

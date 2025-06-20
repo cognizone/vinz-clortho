@@ -1,0 +1,19 @@
+cognizone:
+  vinz:
+    routes:
+      - name: spelHeader
+        path: /proxy/spelHeader/**
+        url: http://example.com/spelHeader
+        headers:
+          response-set:
+            - key: X-Static-Response-Header
+              value: "ResponseOne#{T(java.time.LocalDateTime).now().toString()}"
+            - key: X-Spel-Response-Header
+              value: "ResponseOne#{T(java.time.LocalDateTime).now().toString()}"
+              evaluate: spel
+          request-set:
+            - key: X-Static-Request-Header
+              value: "RequestOne#{T(java.time.LocalDateTime).now().toString()}"
+            - key: X-Spel-Request-Header
+              value: "RequestOne#{T(java.time.LocalDateTime).now().toString()}"
+              evaluate: spel

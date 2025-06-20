@@ -75,7 +75,6 @@ subprojects {
     mavenCentral()
     maven { url "https://s01.oss.sonatype.org/content/repositories/snapshots/" }
     maven { url "https://repo.spring.io/milestone" }
-    maven { url "https://archiva.cogni.zone/repository/public" }
   }
 
   dependencyManagement {
@@ -116,14 +115,9 @@ subprojects {
     withSourcesJar()
   }
 
-
-
-
   tasks.named('test') {
     useJUnitPlatform()
   }
-
-
 
   publishing {
     publications {
@@ -162,16 +156,6 @@ subprojects {
       }
     }
     repositories {
-      if (project.hasProperty("publishToCognizoneArchiva")) {
-        maven {
-          credentials {
-            username = System.properties['archiva.username']
-            password = System.properties['archiva.password']
-          }
-          name = 'cognizone'
-          url = System.properties['archiva.url']
-        }
-      }
       if (project.hasProperty("publishToCognizoneNexus")) {
         maven {
           credentials {
@@ -209,11 +193,7 @@ subprojects {
   tasks.withType(Javadoc) {
     failOnError false
   }
-
-
-
 }
-
 
 project("vinz-clortho") {
   dependencies {
