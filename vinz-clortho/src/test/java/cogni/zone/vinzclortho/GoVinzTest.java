@@ -7,7 +7,7 @@ import org.springframework.boot.test.mock.mockito.MockBeans;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 @AutoConfigureMockMvc
 @ContextConfiguration(classes = EnableVinzInTestConfiguration.class)

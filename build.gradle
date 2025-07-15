@@ -1,8 +1,9 @@
 buildscript {
   ext {
-    commonsIoVersion = "2.18.0"
-    commonsLang3Version = "3.17.0"
+    commonsIoVersion = "2.19.0"
+    commonsLang3Version = "3.18.0"
     httpclientVersion = "4.5.13"
+    jakartaInjectVersion = "2.0.1"
     jsr305Version = "3.0.2"
     junitVersion = "5.9.2"
     assertJVersion = "3.24.2"
@@ -87,7 +88,8 @@ subprojects {
       mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
     }
     dependencies {
-      dependency("javax.inject:javax.inject:1")
+      dependency("jakarta.inject:jakarta.inject-api:${jakartaInjectVersion}")
+
       dependency("com.google.code.findbugs:jsr305:${jsr305Version}")
       dependency("commons-io:commons-io:${commonsIoVersion}")
       dependency("org.apache.commons:commons-lang3:${commonsLang3Version}")
@@ -202,16 +204,14 @@ subprojects {
 
 project("vinz-clortho") {
   dependencies {
-    implementation("javax.inject:javax.inject:1") //if we don't have this dependency the publication build does not work???
     implementation 'org.springframework.boot:spring-boot-starter-web'
-
     implementation "commons-io:commons-io"
     implementation "org.apache.commons:commons-lang3"
     implementation "org.apache.httpcomponents:httpclient"
 
     //test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("javax.inject:javax.inject")
+    testImplementation("jakarta.inject:jakarta.inject-api")
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.assertj:assertj-core")
     testImplementation("org.mockito:mockito-junit-jupiter")
