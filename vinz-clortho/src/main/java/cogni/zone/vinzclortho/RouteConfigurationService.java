@@ -27,6 +27,10 @@ public class RouteConfigurationService {
                  .findFirst();
   }
 
+  public HttpClient getHttpClientConfiguration() {
+    return config.getHttpClient();
+  }
+
   private boolean matches(Route route, HttpServletRequest request) {
     return new AntPathMatcher().match(route.getPath(), request.getServletPath());
   }
@@ -40,6 +44,7 @@ public class RouteConfigurationService {
   @Data
   public static class HttpClient {
     private boolean useSystemProperties;
+    private boolean allowDeleteBody;
   }
 
   @Data

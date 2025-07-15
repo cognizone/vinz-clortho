@@ -1,0 +1,4 @@
+cognizone:
+  vinz:
+    httpClient:
+      allowDeleteBody: true
