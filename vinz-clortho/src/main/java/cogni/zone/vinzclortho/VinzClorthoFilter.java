@@ -1,5 +1,6 @@
 package cogni.zone.vinzclortho;
 
+import cogni.zone.vinzclortho.http.HttpEntityDelete;
 import jakarta.annotation.Nullable;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -207,6 +208,11 @@ public class VinzClorthoFilter implements Filter {
 
   @SuppressWarnings("unused")
   private HttpRequestBase prepareDeleteRequest(String url, HttpServletRequest httpRequest) {
+    if (routeConfigurationService.getHttpClientConfiguration().isAllowDeleteBody()) {
+      HttpEntityDelete httpEntityDelete = new HttpEntityDelete(url);
+      setBody(httpEntityDelete, httpRequest);
+      return httpEntityDelete;
+    }
     return new HttpDelete(url);
   }
 

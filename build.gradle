@@ -190,7 +190,7 @@ subprojects {
     }
   }
   signing {
-    if (project.hasProperty("publishToMavenCentral")) {
+    if (project.hasProperty("signArtifacts")) {
       sign publishing.publications.mavenJava
     }
   }
