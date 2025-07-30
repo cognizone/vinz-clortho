@@ -204,6 +204,8 @@ subprojects {
 
 project("vinz-clortho") {
   dependencies {
+    implementation("javax.inject:javax.inject:1") //if we don't have this dependency the publication build does not work???
+
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation "commons-io:commons-io"
     implementation "org.apache.commons:commons-lang3"
