@@ -1,3 +1,10 @@
+we:
+  have:
+    a:
+      property: hello
+
+my.custom.value: HelloWorld
+
 cognizone:
   vinz:
     routes:
@@ -17,3 +24,9 @@ cognizone:
             - key: X-Spel-Request-Header
               value: "RequestOne#{T(java.time.LocalDateTime).now().toString()}"
               evaluate: spel
+            - key: X-From-Environment-WithLog
+              value: "Hi - #{@environment.getProperty('we.have.a.property')}"
+              evaluate: spel
+            - key: X-From-Environment-NoLog
+              value: "Hi - #{@environment.getProperty('we.have.a.property')}"
+              evaluate: spelNoLog

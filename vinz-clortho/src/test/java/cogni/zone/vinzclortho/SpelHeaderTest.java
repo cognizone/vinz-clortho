@@ -1,5 +1,7 @@
 package cogni.zone.vinzclortho;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.core.Context;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.http.Header;
@@ -14,7 +16,10 @@ import org.assertj.core.api.Assertions;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -38,6 +43,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest()
 @ActiveProfiles("test-spelHeader")
 class SpelHeaderTest extends GoVinzTest {
+
+  private static final MemoryAppender memoryAppender = new MemoryAppender();
+
+  @BeforeAll //beforeAll needs to be static
+  static void beforeAll() {
+    //no logback means kablemo
+    Logger logger = (Logger) LoggerFactory.getLogger(VinzClorthoFilter.class);
+    logger.addAppender(memoryAppender);
+
+    memoryAppender.setContext((Context) LoggerFactory.getILoggerFactory());
+    memoryAppender.start();
+  }
+
+  @BeforeEach
+  void beforeEach() {
+    memoryAppender.reset();
+  }
 
   @Test
   void testSpelRequestHeader() throws Exception {
@@ -64,13 +86,32 @@ class SpelHeaderTest extends GoVinzTest {
       // Verify SpEL request header
       Header spelHeader = httpRequest.getFirstHeader("X-Spel-Request-Header");
       Assertions.assertThat(spelHeader).isNotNull();
-
       MatcherAssert.assertThat(spelHeader.getValue(), new CheckNonOldDateTimeMatcher("RequestOne"));
+
+      // Verify SpEL request header with value from environment
+      Header spelHeaderFromEnvironment = httpRequest.getFirstHeader("X-From-Environment-WithLog");
+      Assertions.assertThat(spelHeaderFromEnvironment).isNotNull();
+      Assertions.assertThat(spelHeaderFromEnvironment.getValue()).isEqualTo("Hi - hello");
+
+      // Verify SpEL request header with value from environment
+      Header spelHeaderFromEnvironmentNoLog = httpRequest.getFirstHeader("X-From-Environment-NoLog");
+      Assertions.assertThat(spelHeaderFromEnvironmentNoLog).isNotNull();
+      Assertions.assertThat(spelHeaderFromEnvironmentNoLog.getValue()).isEqualTo("Hi - hello");
 
       return true;
     }));
 
     Assertions.assertThat(requestChecked).isTrue();
+
+    //check what is logged, important for spel vs spelNoLog
+    boolean hasWithLog = memoryAppender.hasContainsAll("Patched header [X-From-Environment-WithLog] : from [Hi - #{@environment.getProperty('we.have.a.property')}] to [Hi - hello]");
+    Assertions.assertThat(hasWithLog).isTrue();
+
+    boolean hasNoLog = memoryAppender.hasContainsAll("Patched header [X-From-Environment-NoLog]");
+    Assertions.assertThat(hasNoLog).isFalse();
+
+    long logCount = memoryAppender.countContainsAll("Patched header");
+    Assertions.assertThat(logCount).isEqualTo(3L);
   }
 
   @RequiredArgsConstructor

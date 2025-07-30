@@ -71,8 +71,14 @@ The setting of these extra headers can be ignored based on filter which is evalu
 
 #### Use expressions as header values to update them at runtime (since 2.0.3)
 Pass an `evaluate` value for the header properties.
-Current supported values can be `spel` to handle the value as a SpEL expression, or `raw` (default) to just use the value without any transformations.
-Other values will fallback to `raw`.
+Current supported values are:
+- `spel`: to handle the value as a SpEL expression
+- `spelNoLog`: same as `spel` but no values will be logged, useful if header contains sensitive information (since 2.0.5)
+- `raw`: (default) to just use the value without any transformations.
+- Other values will fallback to `raw`.
+
+The spring context is also available in the SpEL expression using `@environment`.
+For example to get a property out of the environment: `#{@environment.getProperty('we.have.a.property')}`
 
 _Note: For a SpEL expression: is the transformation fails, an empty string will be used._
 
