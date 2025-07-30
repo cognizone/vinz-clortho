@@ -6,6 +6,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -23,6 +24,7 @@ import java.util.Optional;
 public class VinzClorthoConfiguration {
   private final Optional<RequestValidator> requestValidator;
   private final Optional<BodyEditor> bodyEditor;
+  private final ApplicationContext context;
 
   @SuppressWarnings("WeakerAccess")
   public static final int cacheBodyFilterOrder = Ordered.HIGHEST_PRECEDENCE;
@@ -45,7 +47,7 @@ public class VinzClorthoConfiguration {
   public FilterRegistrationBean<Filter> vinzClorthoMainFilter() {
     log.info("Init filter with bodyEditor: {}", bodyEditor.isPresent());
     FilterRegistrationBean<Filter> filterFilterRegistrationBean = new FilterRegistrationBean<>();
-    filterFilterRegistrationBean.setFilter(new VinzClorthoFilter(routeConfigurationService(), httpClientFactory(), requestValidator, bodyEditor));
+    filterFilterRegistrationBean.setFilter(new VinzClorthoFilter(routeConfigurationService(), httpClientFactory(), requestValidator, bodyEditor, context));
     filterFilterRegistrationBean.setOrder(mainFilterOrder);
     filterFilterRegistrationBean.setName("vinzClorthoMainFilter");
     return filterFilterRegistrationBean;

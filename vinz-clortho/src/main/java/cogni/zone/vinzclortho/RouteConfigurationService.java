@@ -71,7 +71,18 @@ public class RouteConfigurationService {
   }
 
   public enum EvaluateType {
+    /**
+     * just use the value without any transformations (default value)
+     */
     raw,
-    spel
+    /**
+     * Handle the value as a SpEL expression
+     */
+    spel,
+    /**
+     * Same as `spel` but no values will be logged, useful if header contains sensitive information
+     * @since 2.0.5
+     */
+    spelNoLog
   }
 }

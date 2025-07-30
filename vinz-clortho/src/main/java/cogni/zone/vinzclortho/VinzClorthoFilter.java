@@ -25,10 +25,15 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.expression.BeanExpressionContextAccessor;
+import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.AntPathMatcher;
 
@@ -62,6 +67,7 @@ public class VinzClorthoFilter implements Filter {
   private final HttpClientFactory httpClientFactory;
   private final Optional<RequestValidator> requestValidator;
   private final Optional<BodyEditor> bodyEditor;
+  private final ApplicationContext context;
 
   private Map<String, BiFunction<String, HttpServletRequest, HttpRequestBase>> init() {
     return Collections.synchronizedMap(Map.of("GET", this::prepareGetRequest,
@@ -122,21 +128,31 @@ public class VinzClorthoFilter implements Filter {
   }
 
   private String calculateHeaderValue(RouteConfigurationService.Header header) {
-    if (header.getEvaluate() == RouteConfigurationService.EvaluateType.spel) {
+    if (header.getEvaluate() == RouteConfigurationService.EvaluateType.spel || header.getEvaluate() == RouteConfigurationService.EvaluateType.spelNoLog) {
       try {
         ExpressionParser parser = new SpelExpressionParser();
         Expression exp = parser.parseExpression(header.getValue(), new TemplateParserContext());
-        Object patchedValue = exp.getValue();
+
+        //Add EvaluationContext to allow access to spring context in SpEL expressions
+        Object patchedValue = exp.getValue(createEvaluationContext());
         if (null == patchedValue) throw new NullPointerException("Patch header value returned null");
-        log.info("Patched header [{}] : from [{}] to [{}]", header.getKey(), header.getValue(), patchedValue);
+        if (header.getEvaluate() != RouteConfigurationService.EvaluateType.spelNoLog) log.info("Patched header [{}] : from [{}] to [{}]", header.getKey(), header.getValue(), patchedValue);
         return patchedValue.toString();
       }
       catch (Exception e) {
-        log.warn("Patch header value [{}] failed - returning empty: ", header.getValue(), e);
+        if (header.getEvaluate() == RouteConfigurationService.EvaluateType.spelNoLog) log.warn("Patch header key [{}] failed - returning empty: ", header.getKey(), e);
+        else log.warn("Patch header key [{}] value [{}] failed - returning empty: ", header.getKey(), header.getValue(), e);
         return "";
       }
     }
     return header.getValue();
+  }
+
+  private EvaluationContext createEvaluationContext() {
+    StandardEvaluationContext evaluationContext = new StandardEvaluationContext();
+    evaluationContext.setBeanResolver(new BeanFactoryResolver(context));
+    evaluationContext.addPropertyAccessor(new BeanExpressionContextAccessor());
+    return evaluationContext;
   }
 
   private boolean applyHeader(RouteConfigurationService.Header header, HttpServletRequest httpRequest) {
