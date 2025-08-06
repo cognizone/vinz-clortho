@@ -101,6 +101,7 @@ public class VinzClorthoFilter implements Filter {
     Supplier<InputStream> attribute = (Supplier<InputStream>) httpRequest.getAttribute(bodyContentProviderAttributeKey);
     Optional<HttpResponse> httpStatus = requestValidator.map(validator -> validator.validate(new RequestValidator.Request(httpRequest, attribute)));
     if (httpStatus.isPresent()) {
+      log.debug("Validator: Request not allowed - returning {}", httpStatus.get());
       sendResponse(httpResponse, httpStatus.get());
       return;
     }
@@ -108,8 +109,10 @@ public class VinzClorthoFilter implements Filter {
     String url = constructUrl(route, httpRequest);
     HttpRequestBase request = createRequest(requestFunction, url, httpRequest, route);
     try (CloseableHttpClient client = httpClientFactory.create()) {
+      log.debug("Executing proxied request to {}", url);
       CloseableHttpResponse proxiedResponse = client.execute(request);
       StatusLine statusLine = proxiedResponse.getStatusLine();
+      log.debug("Request done: {}", statusLine);
       httpResponse.setStatus(statusLine.getStatusCode());
 
       Arrays.stream(responseHeadersToPass)
@@ -123,7 +126,9 @@ public class VinzClorthoFilter implements Filter {
            .filter(header -> applyHeader(header, httpRequest))
            .forEach(header -> httpResponse.setHeader(header.getKey(), calculateHeaderValue(header)));
 
+      log.debug("Proxying content...");
       IOUtils.copy(proxiedResponse.getEntity().getContent(), httpResponse.getOutputStream());
+      log.debug("Proxying content done - request done");
     }
   }
 
