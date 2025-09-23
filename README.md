@@ -41,6 +41,14 @@ Create a spring bean implementing `cogni.zone.vinzclortho.BodyEditor`.
 If such a bean exists, it will be called with the original HttpRequest and content body as an InputStream, so you can change the content of the request body.
 The new body has to be returned as a `org.apache.http.HttpEntity` object.
 
+### Altering the response of the Request (since 2.0.7)
+Create a spring bean implementing `cogni.zone.vinzclortho.ResponseEditor`.
+If such a bean exists, it will be called with the original HttpRequest and response object. 
+This allows changing the content of the response.
+The new response has to be returned as a `java.io.InputStream` object. 
+If the response is not altered, the original InputStream of the response object can be returned.
+This method also allows executing actions after a call has been executed.
+
 ### Validate if a Request is allowed
 Create a spring bean implementing `cogni.zone.vinzclortho.RequestValidator`.
 If such a bean exists, it will be called with the original request information.
