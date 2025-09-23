@@ -24,6 +24,7 @@ import java.util.Optional;
 public class VinzClorthoConfiguration {
   private final Optional<RequestValidator> requestValidator;
   private final Optional<BodyEditor> bodyEditor;
+  private final Optional<ResponseEditor> responseEditor;
   private final ApplicationContext context;
 
   @SuppressWarnings("WeakerAccess")
@@ -47,7 +48,7 @@ public class VinzClorthoConfiguration {
   public FilterRegistrationBean<Filter> vinzClorthoMainFilter() {
     log.info("Init filter with bodyEditor: {}", bodyEditor.isPresent());
     FilterRegistrationBean<Filter> filterFilterRegistrationBean = new FilterRegistrationBean<>();
-    filterFilterRegistrationBean.setFilter(new VinzClorthoFilter(routeConfigurationService(), httpClientFactory(), requestValidator, bodyEditor, context));
+    filterFilterRegistrationBean.setFilter(new VinzClorthoFilter(routeConfigurationService(), httpClientFactory(), requestValidator, bodyEditor, responseEditor, context));
     filterFilterRegistrationBean.setOrder(mainFilterOrder);
     filterFilterRegistrationBean.setName("vinzClorthoMainFilter");
     return filterFilterRegistrationBean;

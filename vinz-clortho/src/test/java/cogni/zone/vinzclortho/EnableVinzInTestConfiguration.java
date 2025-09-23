@@ -1,6 +1,7 @@
 package cogni.zone.vinzclortho;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.StringEntity;
 import org.assertj.core.api.Assertions;
@@ -48,6 +49,15 @@ public class EnableVinzInTestConfiguration {
     };
   }
 
+  @Bean
+  @Profile("patch-response1")
+  public ResponseEditor responseEditor1() {
+    return data -> {
+      String value = IOUtils.toString(data.getHttpResponse().getEntity().getContent(), StandardCharsets.UTF_8);
+      String patchedValue = "[[" + value + "]]";
+      return IOUtils.toInputStream(patchedValue, StandardCharsets.UTF_8);
+    };
+  }
 
 }
 

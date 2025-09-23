@@ -67,6 +67,7 @@ public class VinzClorthoFilter implements Filter {
   private final HttpClientFactory httpClientFactory;
   private final Optional<RequestValidator> requestValidator;
   private final Optional<BodyEditor> bodyEditor;
+  private final Optional<ResponseEditor> responseEditor;
   private final ApplicationContext context;
 
   private Map<String, BiFunction<String, HttpServletRequest, HttpRequestBase>> init() {
@@ -127,9 +128,16 @@ public class VinzClorthoFilter implements Filter {
            .forEach(header -> httpResponse.setHeader(header.getKey(), calculateHeaderValue(header)));
 
       log.debug("Proxying content...");
-      IOUtils.copy(proxiedResponse.getEntity().getContent(), httpResponse.getOutputStream());
+      IOUtils.copy(getProxiedInputStream(httpRequest, proxiedResponse), httpResponse.getOutputStream());
       log.debug("Proxying content done - request done");
     }
+  }
+
+  private InputStream getProxiedInputStream(HttpServletRequest httpRequest, CloseableHttpResponse proxiedResponse) throws IOException {
+    if (responseEditor.isEmpty()) return proxiedResponse.getEntity().getContent();
+
+    ResponseEditor.Data responseEditorData = new ResponseEditor.Data(httpRequest, proxiedResponse);
+    return responseEditor.get().editResponse(responseEditorData);
   }
 
   private String calculateHeaderValue(RouteConfigurationService.Header header) {
@@ -185,6 +193,8 @@ public class VinzClorthoFilter implements Filter {
   private void sendResponse(HttpServletResponse httpServletResponse, HttpResponse httpResponse) throws IOException {
     httpServletResponse.setStatus(httpResponse.getStatus());
     ServletOutputStream outputStream = httpServletResponse.getOutputStream();
+
+
     outputStream.write(httpResponse.getMessage().getBytes(StandardCharsets.UTF_8));
     outputStream.flush();
   }
