@@ -24,6 +24,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -67,6 +68,90 @@ class Basic1Test extends GoVinzTest {
       Assertions.assertThat(content).isEqualTo("Jodela");
       return true;
     }));
+  }
+
+  @Test
+  public void basic2SanityCheckTest() throws Exception { //check that it hits vinz because basic2 has some exclusions
+    CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
+    CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
+    StatusLine statusLine = mock(StatusLine.class);
+    HttpEntity httpEntity = mock(HttpEntity.class);
+    when(httpClientFactory.create()).thenReturn(httpClient);
+    when(httpClient.execute(any(HttpPost.class))).thenReturn(httpResponse);
+    when(statusLine.getStatusCode()).thenReturn(200);
+    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(httpResponse.getHeaders(any())).thenReturn(new Header[0]);
+    when(httpResponse.getEntity()).thenReturn(httpEntity);
+    when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream("IT".getBytes(StandardCharsets.UTF_8)));
+
+
+    MockHttpServletRequestBuilder testPostRequest = post("/proxy/basic2/test")
+            .servletPath("/proxy/basic2/test")
+            .content("Jodela");
+    mockMvc.perform(testPostRequest)
+           .andExpect(status().isOk())
+           .andExpect(content().string("IT"));
+
+
+    AtomicBoolean realRequestBodyChecked = new AtomicBoolean(false);
+    verify(httpClient, times(1)).execute(any());
+    verify(httpClient).execute(argThat(thaRealRequest -> {
+      if (realRequestBodyChecked.getAndSet(true)) return true; //called twice for some reason, just check once otherwise inputstream is gone
+      Assertions.assertThat(thaRealRequest).isExactlyInstanceOf(HttpPost.class);
+
+      HttpEntity entity = ((HttpPost) thaRealRequest).getEntity();
+      String content = TestHelper.toString(entity);
+      Assertions.assertThat(content).isEqualTo("Jodela");
+      return true;
+    }));
+  }
+
+  @Test
+  public void excludedPath1() throws Exception {
+    CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
+    CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
+    StatusLine statusLine = mock(StatusLine.class);
+    HttpEntity httpEntity = mock(HttpEntity.class);
+    when(httpClientFactory.create()).thenReturn(httpClient);
+    when(httpClient.execute(any(HttpPost.class))).thenReturn(httpResponse);
+    when(statusLine.getStatusCode()).thenReturn(200);
+    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(httpResponse.getHeaders(any())).thenReturn(new Header[0]);
+    when(httpResponse.getEntity()).thenReturn(httpEntity);
+//    when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream("IT".getBytes(StandardCharsets.UTF_8)));
+
+
+    MockHttpServletRequestBuilder testGetRequest = get(TestController.pathBase)
+            .servletPath(TestController.pathBase);
+    mockMvc.perform(testGetRequest)
+           .andExpect(status().isOk())
+           .andExpect(content().string(TestController.defaultResponseBase + TestController.pathBase));
+
+    verify(httpClient, times(0)).execute(any());
+  }
+
+  @Test
+  public void excludedPath2() throws Exception {
+    CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
+    CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
+    StatusLine statusLine = mock(StatusLine.class);
+    HttpEntity httpEntity = mock(HttpEntity.class);
+    when(httpClientFactory.create()).thenReturn(httpClient);
+    when(httpClient.execute(any(HttpPost.class))).thenReturn(httpResponse);
+    when(statusLine.getStatusCode()).thenReturn(200);
+    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(httpResponse.getHeaders(any())).thenReturn(new Header[0]);
+    when(httpResponse.getEntity()).thenReturn(httpEntity);
+//    when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream("IT".getBytes(StandardCharsets.UTF_8)));
+
+
+    MockHttpServletRequestBuilder testGetRequest = get(TestController.pathWithSubPath)
+            .servletPath(TestController.pathWithSubPath);
+    mockMvc.perform(testGetRequest)
+           .andExpect(status().isOk())
+           .andExpect(content().string(TestController.defaultResponseBase + TestController.pathWithSubPath));
+
+    verify(httpClient, times(0)).execute(any());
   }
 
   //Implicitly disabled
