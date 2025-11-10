@@ -44,11 +44,11 @@ public class CacheBodyFilter implements Filter {
     if (routeConfigurationService.hasMatchingRoute(httpRequest)) {
       //We patch the request because vinz is nice and lets everybody pass before him
       //  But not everybody is as nice as vinz, and it might be that the body of the request is already consumed when we get to vinz (foei!)
-      log.debug("Vinz matches, patching request");
+      log.debug("Vinz matches, patching request -> {}", httpRequest.getServletPath());
       doPatchFilter(httpRequest, response, chain);
     }
     else {
-      log.debug("No vinz");
+      log.debug("No vinz -> {}", httpRequest.getServletPath());
       chain.doFilter(request, response);
     }
   }

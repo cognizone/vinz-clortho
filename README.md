@@ -14,6 +14,9 @@ cognizone:
       - name: firstRoute   # just a name, make it unique, nothing else special here 
         path: /proxy/route1/**  # the path on your server (if you use a servlet context path, this will be the part after the context path) 
         url: http://example.com/route1  # The destination url to proxy to
+        exclude-paths:
+          - /proxy/route1/ignore/this/one
+          - /proxy/route1/and/these/also/**
       - name: secondRoute
         path: /proxy/route2/**
         url: http://example.com/route2
@@ -53,6 +56,10 @@ This method also allows executing actions after a call has been executed.
 Create a spring bean implementing `cogni.zone.vinzclortho.RequestValidator`.
 If such a bean exists, it will be called with the original request information.
 If you return a non-null value, that value with be used to send the response and no proxying will be done.
+
+### Exclude some paths for a certain route (since 2.0.8)
+Set the configuration `exclude-paths` inside the specific route configuration to the list of paths to exclude.
+These paths with be matched with AntMatchers in the same way the route path is matched.
 
 ### HTTP methods
 At the moment following HTTP methods are supported: GET, POST, PUT, DELETE

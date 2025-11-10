@@ -110,10 +110,10 @@ public class VinzClorthoFilter implements Filter {
     String url = constructUrl(route, httpRequest);
     HttpRequestBase request = createRequest(requestFunction, url, httpRequest, route);
     try (CloseableHttpClient client = httpClientFactory.create()) {
-      log.debug("Executing proxied request to {}", url);
+      log.info("Executing proxied request to {}", url);
       CloseableHttpResponse proxiedResponse = client.execute(request);
       StatusLine statusLine = proxiedResponse.getStatusLine();
-      log.debug("Request done: {}", statusLine);
+      log.info("Request done: {}", statusLine);
       httpResponse.setStatus(statusLine.getStatusCode());
 
       Arrays.stream(responseHeadersToPass)

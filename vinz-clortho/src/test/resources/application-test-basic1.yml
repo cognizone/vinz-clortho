@@ -4,3 +4,9 @@ cognizone:
       - name: basic1
         path: /proxy/basic1/**
         url: http://example.com/basic1
+      - name: basic2
+        path: /proxy/basic2/**
+        url: http://example.com/basic2
+        exclude-paths:
+          - /proxy/basic2/testController
+          - /proxy/basic2/testController/with/**

@@ -33,7 +33,27 @@ public class RouteConfigurationService {
   }
 
   private boolean matches(Route route, HttpServletRequest request) {
-    return new AntPathMatcher().match(route.getPath(), request.getServletPath());
+    String servletPath = request.getServletPath();
+
+    if (!matches(route.getPath(), servletPath)) {
+      log.debug("Route {} (path: {}) did not match for servletPath {}", route.getName(), route.getPath(), servletPath);
+      return false;
+    }
+
+    log.debug("Route {} (path: {}) matched for servletPath {} - checking exclusions", route.getName(), route.getPath(), servletPath);
+
+    for (String excludePath : route.getExcludePaths()) {
+      if (!matches(excludePath, servletPath)) continue;
+      log.debug("Route {} (path: {}) excluded for servletPath {}", route.getName(), excludePath, servletPath);
+      return false;
+    }
+
+    log.debug("Route {} (path: {}) not excluded for servletPath {}", route.getName(), route.getPath(), servletPath);
+    return true;
+  }
+
+  private boolean matches(String routePath, String servletPath) {
+    return new AntPathMatcher().match(routePath, servletPath);
   }
 
   @Data
@@ -53,6 +73,7 @@ public class RouteConfigurationService {
     private String name;
     private String path;
     private String url;
+    private List<String> excludePaths = new ArrayList<>();
     private Headers headers = new Headers();
   }
 
@@ -81,6 +102,7 @@ public class RouteConfigurationService {
     spel,
     /**
      * Same as `spel` but no values will be logged, useful if header contains sensitive information
+     *
      * @since 2.0.5
      */
     spelNoLog
