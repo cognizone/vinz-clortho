@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.StatusLine;
@@ -121,6 +122,11 @@ public class VinzClorthoFilter implements Filter {
             .flatMap(Arrays::stream)
             .forEach(header -> httpResponse.addHeader(header.getName(), header.getValue()));
 
+      route.getHeaders().getResponsePass().stream()
+            .map(proxiedResponse::getHeaders)
+            .flatMap(Arrays::stream)
+            .forEach(header -> httpResponse.addHeader(header.getName(), header.getValue()));
+
       route.getHeaders()
            .getResponseSet()
            .stream()
@@ -210,6 +216,13 @@ public class VinzClorthoFilter implements Filter {
       while (headerValues.hasMoreElements()) {
         String headerValue = headerValues.nextElement();
         request.addHeader(headersToPass, headerValue);
+      }
+    }
+
+    for (String headerToPass : route.getHeaders().getRequestPass()) {
+      Enumeration<String> headerValues = httpRequest.getHeaders(headerToPass);
+      while (headerValues.hasMoreElements()) {
+        request.addHeader(headerToPass, headerValues.nextElement());
       }
     }
 

@@ -1,0 +1,13 @@
+cognizone:
+  vinz:
+    routes:
+      - name: passHeader
+        path: /proxy/passHeader/**
+        url: http://example.com/passHeader
+        headers:
+          request-pass:
+            - Cookie
+            - X-Custom-Request-Header
+          response-pass:
+            - Set-Cookie
+            - X-Custom-Response-Header

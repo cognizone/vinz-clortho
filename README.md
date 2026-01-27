@@ -66,11 +66,23 @@ At the moment following HTTP methods are supported: GET, POST, PUT, DELETE
 
 ### Headers
 #### Pass from original request
-Follow headers will be passed from the original request to the destination:
+Following headers will be passed from the original request to the destination:
 - Accept
 - Accept-Language
 - Content-Type
 - User-Agent
+
+#### Pass additional headers through (since 2.0.9)
+Use `request-pass` to pass additional headers from the original request to the destination.
+Use `response-pass` to pass additional headers from the proxied response back to the caller.
+
+```yaml
+headers:
+  request-pass:
+    - Cookie
+  response-pass:
+    - Set-Cookie
+```
 
 #### Add extra fixed headers
 
