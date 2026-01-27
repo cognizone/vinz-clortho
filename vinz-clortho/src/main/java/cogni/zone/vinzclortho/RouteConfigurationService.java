@@ -81,6 +81,9 @@ public class RouteConfigurationService {
   public static class Headers {
     private List<Header> responseSet = new ArrayList<>();
     private List<Header> requestSet = new ArrayList<>();
+
+    private List<String> requestPass = new ArrayList<>();
+    private List<String> responsePass = new ArrayList<>();
   }
 
   @Data
