@@ -76,6 +76,8 @@ Following headers will be passed from the original request to the destination:
 Use `request-pass` to pass additional headers from the original request to the destination.
 Use `response-pass` to pass additional headers from the proxied response back to the caller.
 
+Note: The default headers listed above are always passed, even if not specified here.
+
 ```yaml
 headers:
   request-pass:
