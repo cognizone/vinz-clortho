@@ -42,13 +42,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static cogni.zone.vinzclortho.CacheBodyFilter.bodyContentProviderAttributeKey;
 import static cogni.zone.vinzclortho.CacheBodyFilter.bodySizeProviderAttributeKey;
@@ -117,15 +122,7 @@ public class VinzClorthoFilter implements Filter {
       log.info("Request done: {}", statusLine);
       httpResponse.setStatus(statusLine.getStatusCode());
 
-      Arrays.stream(responseHeadersToPass)
-            .map(proxiedResponse::getHeaders)
-            .flatMap(Arrays::stream)
-            .forEach(header -> httpResponse.addHeader(header.getName(), header.getValue()));
-
-      route.getHeaders().getResponsePass().stream()
-            .map(proxiedResponse::getHeaders)
-            .flatMap(Arrays::stream)
-            .forEach(header -> httpResponse.addHeader(header.getName(), header.getValue()));
+      passResponseHeaders(proxiedResponse, httpResponse, route.getHeaders().getResponsePass());
 
       route.getHeaders()
            .getResponseSet()
@@ -144,6 +141,15 @@ public class VinzClorthoFilter implements Filter {
 
     ResponseEditor.Data responseEditorData = new ResponseEditor.Data(httpRequest, proxiedResponse);
     return responseEditor.get().editResponse(responseEditorData);
+  }
+
+  private void passResponseHeaders(CloseableHttpResponse proxiedResponse, HttpServletResponse httpResponse, Collection<String> additionalHeaders) {
+    Set<String> headersToPass = Stream.concat(Arrays.stream(responseHeadersToPass), additionalHeaders.stream())
+                                      .collect(Collectors.toSet());
+    headersToPass.stream()
+                 .map(proxiedResponse::getHeaders)
+                 .flatMap(Arrays::stream)
+                 .forEach(header -> httpResponse.addHeader(header.getName(), header.getValue()));
   }
 
   private String calculateHeaderValue(RouteConfigurationService.Header header) {
@@ -205,32 +211,30 @@ public class VinzClorthoFilter implements Filter {
     outputStream.flush();
   }
 
-  @SuppressWarnings("MethodWithMultipleLoops")
   private HttpRequestBase createRequest(BiFunction<String, HttpServletRequest, HttpRequestBase> requestFunction,
                                         String url,
                                         HttpServletRequest httpRequest,
                                         RouteConfigurationService.Route route) {
     HttpRequestBase request = requestFunction.apply(url, httpRequest);
-    for (String headersToPass : requestHeadersToPass) {
-      Enumeration<String> headerValues = httpRequest.getHeaders(headersToPass);
-      while (headerValues.hasMoreElements()) {
-        String headerValue = headerValues.nextElement();
-        request.addHeader(headersToPass, headerValue);
-      }
-    }
 
-    for (String headerToPass : route.getHeaders().getRequestPass()) {
-      Enumeration<String> headerValues = httpRequest.getHeaders(headerToPass);
-      while (headerValues.hasMoreElements()) {
-        request.addHeader(headerToPass, headerValues.nextElement());
-      }
-    }
+    passRequestHeaders(httpRequest, request, route.getHeaders().getRequestPass());
 
     route.getHeaders()
          .getRequestSet()
          .forEach(headerToSet -> request.addHeader(headerToSet.getKey(), calculateHeaderValue(headerToSet)));
 
     return request;
+  }
+
+  private void passRequestHeaders(HttpServletRequest httpRequest, HttpRequestBase request, Collection<String> additionalHeaders) {
+    Set<String> headersToPass = Stream.concat(Arrays.stream(requestHeadersToPass), additionalHeaders.stream())
+                                      .collect(Collectors.toSet());
+    for (String headerToPass : headersToPass) {
+      Enumeration<String> headerValues = httpRequest.getHeaders(headerToPass);
+      while (headerValues.hasMoreElements()) {
+        request.addHeader(headerToPass, headerValues.nextElement());
+      }
+    }
   }
 
   @SuppressWarnings("unused")
