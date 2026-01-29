@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.StatusLine;
@@ -45,14 +44,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static cogni.zone.vinzclortho.CacheBodyFilter.bodyContentProviderAttributeKey;
@@ -144,12 +140,11 @@ public class VinzClorthoFilter implements Filter {
   }
 
   private void passResponseHeaders(CloseableHttpResponse proxiedResponse, HttpServletResponse httpResponse, Collection<String> additionalHeaders) {
-    Set<String> headersToPass = Stream.concat(Arrays.stream(responseHeadersToPass), additionalHeaders.stream())
-                                      .collect(Collectors.toSet());
-    headersToPass.stream()
-                 .map(proxiedResponse::getHeaders)
-                 .flatMap(Arrays::stream)
-                 .forEach(header -> httpResponse.addHeader(header.getName(), header.getValue()));
+    Stream.concat(Arrays.stream(responseHeadersToPass), additionalHeaders.stream())
+          .distinct()
+          .map(proxiedResponse::getHeaders)
+          .flatMap(Arrays::stream)
+          .forEach(header -> httpResponse.addHeader(header.getName(), header.getValue()));
   }
 
   private String calculateHeaderValue(RouteConfigurationService.Header header) {
@@ -227,13 +222,15 @@ public class VinzClorthoFilter implements Filter {
   }
 
   private void passRequestHeaders(HttpServletRequest httpRequest, HttpRequestBase request, Collection<String> additionalHeaders) {
-    Set<String> headersToPass = Stream.concat(Arrays.stream(requestHeadersToPass), additionalHeaders.stream())
-                                      .collect(Collectors.toSet());
-    for (String headerToPass : headersToPass) {
-      Enumeration<String> headerValues = httpRequest.getHeaders(headerToPass);
-      while (headerValues.hasMoreElements()) {
-        request.addHeader(headerToPass, headerValues.nextElement());
-      }
+    Stream.concat(Arrays.stream(requestHeadersToPass), additionalHeaders.stream())
+          .distinct()
+          .forEach(headerName -> addRequestHeader(httpRequest, request, headerName));
+  }
+
+  private void addRequestHeader(HttpServletRequest httpRequest, HttpRequestBase request, String headerName) {
+    Enumeration<String> headerValues = httpRequest.getHeaders(headerName);
+    while (headerValues.hasMoreElements()) {
+      request.addHeader(headerName, headerValues.nextElement());
     }
   }
 
