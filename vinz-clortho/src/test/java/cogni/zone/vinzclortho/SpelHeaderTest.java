@@ -120,8 +120,9 @@ class SpelHeaderTest extends GoVinzTest {
 
     @Override
     public boolean matches(Object actual) {
-      if (!(actual instanceof String value)) return false;
+      if (!(actual instanceof String)) return false;
 
+      String value = (String) actual;
       if (!value.startsWith(prefix)) return false;
 
       long headerMs = LocalDateTime.parse(value.substring(prefix.length())).toEpochSecond(ZoneOffset.UTC);

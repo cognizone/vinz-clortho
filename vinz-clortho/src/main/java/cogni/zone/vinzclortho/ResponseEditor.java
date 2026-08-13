@@ -1,12 +1,12 @@
 package cogni.zone.vinzclortho;
 
-import jakarta.annotation.Nonnull;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.client.methods.CloseableHttpResponse;
 
+import javax.annotation.Nonnull;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 
