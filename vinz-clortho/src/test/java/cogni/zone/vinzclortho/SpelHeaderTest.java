@@ -16,7 +16,6 @@ import org.assertj.core.api.Assertions;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.MatcherAssert;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
@@ -46,18 +45,16 @@ class SpelHeaderTest extends GoVinzTest {
 
   private static final MemoryAppender memoryAppender = new MemoryAppender();
 
-  @BeforeAll //beforeAll needs to be static
-  static void beforeAll() {
-    //no logback means kablemo
-    Logger logger = (Logger) LoggerFactory.getLogger(VinzClorthoFilter.class);
-    logger.addAppender(memoryAppender);
-
-    memoryAppender.setContext((Context) LoggerFactory.getILoggerFactory());
-    memoryAppender.start();
-  }
-
   @BeforeEach
   void beforeEach() {
+    //Attach the appender per-test: the Spring Boot logging system re-initializes logback while the
+    //application context starts (which happens after any @BeforeAll), so a statically-attached
+    //appender would be detached before the test runs.
+    Logger logger = (Logger) LoggerFactory.getLogger(VinzClorthoFilter.class);
+    memoryAppender.setContext((Context) LoggerFactory.getILoggerFactory());
+    logger.detachAppender(memoryAppender);
+    logger.addAppender(memoryAppender);
+    memoryAppender.start();
     memoryAppender.reset();
   }
 
