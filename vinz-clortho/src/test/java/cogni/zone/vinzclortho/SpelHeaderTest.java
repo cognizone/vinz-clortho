@@ -4,14 +4,11 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.core.Context;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.assertj.core.api.Assertions;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -60,7 +57,7 @@ class SpelHeaderTest extends GoVinzTest {
 
   @Test
   void testSpelRequestHeader() throws Exception {
-    HttpClient httpClient = setupMocks();
+    CloseableHttpClient httpClient = setupMocks();
 
     MockHttpServletRequestBuilder testPostRequest = post("/proxy/spelHeader/test")
             .servletPath("/proxy/spelHeader/test");
@@ -73,7 +70,7 @@ class SpelHeaderTest extends GoVinzTest {
     verify(httpClient).execute(argThat(request -> {
       if (requestChecked.getAndSet(true)) return true; // Only check once
 
-      HttpRequestBase httpRequest = (HttpRequestBase) request;
+      var httpRequest = request;
 
       // Verify static request header
       Header staticHeader = httpRequest.getFirstHeader("X-Static-Request-Header");
@@ -134,16 +131,14 @@ class SpelHeaderTest extends GoVinzTest {
   }
 
   @SneakyThrows
-  private HttpClient setupMocks() {
+  private CloseableHttpClient setupMocks() {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
-    StatusLine statusLine = mock(StatusLine.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
 
     when(httpClientFactory.create()).thenReturn(httpClient);
     when(httpClient.execute(any(HttpPost.class))).thenReturn(httpResponse);
-    when(statusLine.getStatusCode()).thenReturn(200);
-    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(httpResponse.getCode()).thenReturn(200);
     when(httpResponse.getHeaders(any())).thenReturn(new Header[0]);
     when(httpResponse.getEntity()).thenReturn(httpEntity);
     when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream("IT".getBytes(StandardCharsets.UTF_8)));
