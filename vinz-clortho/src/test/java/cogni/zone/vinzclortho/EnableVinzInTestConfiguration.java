@@ -3,7 +3,7 @@ package cogni.zone.vinzclortho;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.entity.StringEntity;
+import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.assertj.core.api.Assertions;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -2,7 +2,6 @@ buildscript {
   ext {
     //only for artifacts the Spring Boot BOM does not manage (or where an explicit version is needed)
     commonsIoVersion = "2.22.0"
-    httpclientVersion = "4.5.14"
     jakartaInjectVersion = "2.0.1"
   }
 }
@@ -77,10 +76,9 @@ subprojects {
     imports {
       mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
     }
-    //commons-lang3, jakarta.inject, JUnit, AssertJ and Mockito are managed by the Spring Boot BOM
+    //commons-lang3, jakarta.inject, httpclient5, JUnit, AssertJ and Mockito are managed by the Spring Boot BOM
     dependencies {
       dependency("commons-io:commons-io:${commonsIoVersion}")
-      dependency("org.apache.httpcomponents:httpclient:${httpclientVersion}")
     }
   }
 
@@ -195,7 +193,7 @@ project("vinz-clortho") {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation "commons-io:commons-io"
     implementation "org.apache.commons:commons-lang3"
-    implementation "org.apache.httpcomponents:httpclient"
+    implementation "org.apache.httpcomponents.client5:httpclient5"
 
     //test
     testImplementation("org.springframework.boot:spring-boot-starter-test")

@@ -1,12 +1,11 @@
 package cogni.zone.vinzclortho;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.message.BasicHeader;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.core5.http.message.BasicHeader;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,12 +33,10 @@ class PassHeaderTest extends GoVinzTest {
   public void requestPass_cookieHeaderIsPassedToProxiedRequest() throws Exception {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
-    StatusLine statusLine = mock(StatusLine.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
     when(httpClientFactory.create()).thenReturn(httpClient);
     when(httpClient.execute(any(HttpPost.class))).thenReturn(httpResponse);
-    when(statusLine.getStatusCode()).thenReturn(200);
-    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(httpResponse.getCode()).thenReturn(200);
     when(httpResponse.getHeaders(any())).thenReturn(new Header[0]);
     when(httpResponse.getEntity()).thenReturn(httpEntity);
     when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream("OK".getBytes(StandardCharsets.UTF_8)));
@@ -68,12 +65,10 @@ class PassHeaderTest extends GoVinzTest {
   public void requestPass_customHeaderIsPassedToProxiedRequest() throws Exception {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
-    StatusLine statusLine = mock(StatusLine.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
     when(httpClientFactory.create()).thenReturn(httpClient);
     when(httpClient.execute(any(HttpPost.class))).thenReturn(httpResponse);
-    when(statusLine.getStatusCode()).thenReturn(200);
-    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(httpResponse.getCode()).thenReturn(200);
     when(httpResponse.getHeaders(any())).thenReturn(new Header[0]);
     when(httpResponse.getEntity()).thenReturn(httpEntity);
     when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream("OK".getBytes(StandardCharsets.UTF_8)));
@@ -102,12 +97,10 @@ class PassHeaderTest extends GoVinzTest {
   public void requestPass_headerNotInConfigIsNotPassed() throws Exception {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
-    StatusLine statusLine = mock(StatusLine.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
     when(httpClientFactory.create()).thenReturn(httpClient);
     when(httpClient.execute(any(HttpPost.class))).thenReturn(httpResponse);
-    when(statusLine.getStatusCode()).thenReturn(200);
-    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(httpResponse.getCode()).thenReturn(200);
     when(httpResponse.getHeaders(any())).thenReturn(new Header[0]);
     when(httpResponse.getEntity()).thenReturn(httpEntity);
     when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream("OK".getBytes(StandardCharsets.UTF_8)));
@@ -134,12 +127,10 @@ class PassHeaderTest extends GoVinzTest {
   public void responsePass_setCookieHeaderIsPassedToResponse() throws Exception {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
-    StatusLine statusLine = mock(StatusLine.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
     when(httpClientFactory.create()).thenReturn(httpClient);
     when(httpClient.execute(any(HttpPost.class))).thenReturn(httpResponse);
-    when(statusLine.getStatusCode()).thenReturn(200);
-    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(httpResponse.getCode()).thenReturn(200);
     when(httpResponse.getEntity()).thenReturn(httpEntity);
     when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream("OK".getBytes(StandardCharsets.UTF_8)));
 
@@ -161,12 +152,10 @@ class PassHeaderTest extends GoVinzTest {
   public void responsePass_customResponseHeaderIsPassedToResponse() throws Exception {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
-    StatusLine statusLine = mock(StatusLine.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
     when(httpClientFactory.create()).thenReturn(httpClient);
     when(httpClient.execute(any(HttpPost.class))).thenReturn(httpResponse);
-    when(statusLine.getStatusCode()).thenReturn(200);
-    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(httpResponse.getCode()).thenReturn(200);
     when(httpResponse.getEntity()).thenReturn(httpEntity);
     when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream("OK".getBytes(StandardCharsets.UTF_8)));
 
@@ -188,12 +177,10 @@ class PassHeaderTest extends GoVinzTest {
   public void responsePass_multipleSetCookieHeadersAreAllPassed() throws Exception {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
-    StatusLine statusLine = mock(StatusLine.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
     when(httpClientFactory.create()).thenReturn(httpClient);
     when(httpClient.execute(any(HttpPost.class))).thenReturn(httpResponse);
-    when(statusLine.getStatusCode()).thenReturn(200);
-    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(httpResponse.getCode()).thenReturn(200);
     when(httpResponse.getEntity()).thenReturn(httpEntity);
     when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream("OK".getBytes(StandardCharsets.UTF_8)));
 
@@ -217,12 +204,10 @@ class PassHeaderTest extends GoVinzTest {
   public void responsePass_onlyConfiguredHeadersArePassed() throws Exception {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
-    StatusLine statusLine = mock(StatusLine.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
     when(httpClientFactory.create()).thenReturn(httpClient);
     when(httpClient.execute(any(HttpPost.class))).thenReturn(httpResponse);
-    when(statusLine.getStatusCode()).thenReturn(200);
-    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(httpResponse.getCode()).thenReturn(200);
     when(httpResponse.getEntity()).thenReturn(httpEntity);
     when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream("OK".getBytes(StandardCharsets.UTF_8)));
 
@@ -253,12 +238,10 @@ class PassHeaderTest extends GoVinzTest {
   public void requestPass_responsePassHeaderIsNotPassedToRequest() throws Exception {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
-    StatusLine statusLine = mock(StatusLine.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
     when(httpClientFactory.create()).thenReturn(httpClient);
     when(httpClient.execute(any(HttpPost.class))).thenReturn(httpResponse);
-    when(statusLine.getStatusCode()).thenReturn(200);
-    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(httpResponse.getCode()).thenReturn(200);
     when(httpResponse.getHeaders(any())).thenReturn(new Header[0]);
     when(httpResponse.getEntity()).thenReturn(httpEntity);
     when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream("OK".getBytes(StandardCharsets.UTF_8)));
@@ -291,12 +274,10 @@ class PassHeaderTest extends GoVinzTest {
   public void responsePass_requestPassHeaderIsNotPassedToResponse() throws Exception {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
-    StatusLine statusLine = mock(StatusLine.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
     when(httpClientFactory.create()).thenReturn(httpClient);
     when(httpClient.execute(any(HttpPost.class))).thenReturn(httpResponse);
-    when(statusLine.getStatusCode()).thenReturn(200);
-    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(httpResponse.getCode()).thenReturn(200);
     when(httpResponse.getEntity()).thenReturn(httpEntity);
     when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream("OK".getBytes(StandardCharsets.UTF_8)));
 

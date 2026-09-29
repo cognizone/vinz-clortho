@@ -1,12 +1,10 @@
 package cogni.zone.vinzclortho;
 
-import cogni.zone.vinzclortho.http.HttpEntityDelete;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.classic.methods.HttpDelete;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,12 +33,10 @@ class DeleteBodyEnabled_BodyEditTest extends GoVinzTest {
   public void runDeleteWithBodyAndPatchIt() throws Exception {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
-    StatusLine statusLine = mock(StatusLine.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
     when(httpClientFactory.create()).thenReturn(httpClient);
-    when(httpClient.execute(any(HttpEntityDelete.class))).thenReturn(httpResponse);
-    when(statusLine.getStatusCode()).thenReturn(200);
-    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(httpClient.execute(any(HttpDelete.class))).thenReturn(httpResponse);
+    when(httpResponse.getCode()).thenReturn(200);
     when(httpResponse.getHeaders(any())).thenReturn(new Header[0]);
     when(httpResponse.getEntity()).thenReturn(httpEntity);
     when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream("IT".getBytes(StandardCharsets.UTF_8)));
@@ -56,9 +52,9 @@ class DeleteBodyEnabled_BodyEditTest extends GoVinzTest {
     verify(httpClient, times(1)).execute(any());
     verify(httpClient).execute(argThat(thaRealRequest -> {
       if (realRequestBodyChecked.getAndSet(true)) return true; //called twice for some reason, just check once otherwise inputstream is gone
-      Assertions.assertThat(thaRealRequest).isExactlyInstanceOf(HttpEntityDelete.class);
+      Assertions.assertThat(thaRealRequest).isExactlyInstanceOf(HttpDelete.class);
 
-      HttpEntity entity = ((HttpEntityEnclosingRequest) thaRealRequest).getEntity();
+      HttpEntity entity = ((HttpDelete) thaRealRequest).getEntity();
       String content = TestHelper.toString(entity);
       Assertions.assertThat(content).isEqualTo("Phone home");
       return true;

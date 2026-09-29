@@ -3,7 +3,7 @@ package cogni.zone.vinzclortho;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.apache.http.HttpEntity;
+import org.apache.hc.core5.http.HttpEntity;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
@@ -15,7 +15,7 @@ public interface BodyEditor {
   /**
    *
    * @param request Information about the request.
-   * @return The adapted body content as a {@code org.apache.http.HttpEntity} object. Can be null to use the original body.
+   * @return The adapted body content as a {@code org.apache.hc.core5.http.HttpEntity} object. Can be null to use the original body.
    */
   @Nullable
   HttpEntity editBody(@Nonnull Request request);
