@@ -2,7 +2,7 @@ package cogni.zone.vinzclortho;
 
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpEntity;
+import org.apache.hc.core5.http.HttpEntity;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
